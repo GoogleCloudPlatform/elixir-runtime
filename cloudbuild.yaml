@@ -1,31 +1,50 @@
 steps:
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION', '--build-arg', 'ERLANG_VERSION=$_ERLANG_VERSION', 'erlang-runtime']
-    id: erlang
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang193:$_TAG', '--build-arg', 'ERLANG_VERSION=19.3-1', 'erlang-runtime']
+    waitFor: ['-']
+    id: erlang-193
 
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir14', '--build-arg', 'ELIXIR_VERSION=1.4.4', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION', 'elixir-runtime']
-    waitFor: ['erlang']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang192:$_TAG', '--build-arg', 'ERLANG_VERSION=19.2.3-1', 'erlang-runtime']
+    waitFor: ['-']
+    id: erlang-192
+
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang191:$_TAG', '--build-arg', 'ERLANG_VERSION=19.1.5-1', 'erlang-runtime']
+    waitFor: ['-']
+    id: erlang-191
+
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang190:$_TAG', '--build-arg', 'ERLANG_VERSION=19.0.7-1', 'erlang-runtime']
+    waitFor: ['-']
+    id: erlang-190
+
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir14:$_TAG', '--build-arg', 'ELIXIR_VERSION=1.4.4-1', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang193:$_TAG', 'elixir-runtime']
+    waitFor: ['erlang-193']
     id: elixir-14
 
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir13', '--build-arg', 'ELIXIR_VERSION=1.3.4', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION', 'elixir-runtime']
-    waitFor: ['erlang']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir13:$_TAG', '--build-arg', 'ELIXIR_VERSION=1.3.4-1', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang193:$_TAG', 'elixir-runtime']
+    waitFor: ['erlang-193']
     id: elixir-13
 
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir14', '--build-arg', 'ELIXIR_VERSION=1.2.6', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION', 'elixir-runtime']
-    waitFor: ['erlang']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir12:$_TAG', '--build-arg', 'ELIXIR_VERSION=1.2.6-1', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang193:$_TAG', 'elixir-runtime']
+    waitFor: ['erlang-193']
     id: elixir-12
 
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir14', '--build-arg', 'ELIXIR_VERSION=1.1.1', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION', 'elixir-runtime']
-    waitFor: ['erlang']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/elixir11:$_TAG', '--build-arg', 'ELIXIR_VERSION=1.1.1-2', '--build-arg', 'ERLANG_IMAGE=gcr.io/$PROJECT_ID/erlang193:$_TAG', 'elixir-runtime']
+    waitFor: ['erlang-193']
     id: elixir-11
 
 images:
-  - gcr.io/$PROJECT_ID/erlang:$_ERLANG_VERSION
-  - gcr.io/$PROJECT_ID/elixir14
-  - gcr.io/$PROJECT_ID/elixir13
-  - gcr.io/$PROJECT_ID/elixir12
-  - gcr.io/$PROJECT_ID/elixir11
+  - gcr.io/$PROJECT_ID/erlang193:$_TAG
+  - gcr.io/$PROJECT_ID/erlang192:$_TAG
+  - gcr.io/$PROJECT_ID/erlang191:$_TAG
+  - gcr.io/$PROJECT_ID/erlang190:$_TAG
+  - gcr.io/$PROJECT_ID/elixir14:$_TAG
+  - gcr.io/$PROJECT_ID/elixir13:$_TAG
+  - gcr.io/$PROJECT_ID/elixir12:$_TAG
+  - gcr.io/$PROJECT_ID/elixir11:$_TAG

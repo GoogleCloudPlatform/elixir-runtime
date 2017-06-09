@@ -17,8 +17,8 @@
 ARG ERLANG_IMAGE
 FROM $ERLANG_IMAGE
 
-RUN apt-get update -y && \
-    apt-get -y upgrade
+#RUN apt-get update -y && \
+#    apt-get -y upgrade
 
 ARG ELIXIR_VERSION="1.4.1"
 
