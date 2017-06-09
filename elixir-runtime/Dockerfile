@@ -14,12 +14,16 @@
 
 # Dockerfile for Running Erlang
 
-FROM erlang
+ARG ERLANG_IMAGE
+FROM $ERLANG_IMAGE
 
 RUN apt-get update -y && \
     apt-get -y upgrade
 
 ARG ELIXIR_VERSION="1.4.1"
+
+ENV ELIXIR_VERSION=$ELIXIR_VERSION \
+    MIX_ENV=prod
 
 COPY build-scripts /build-scripts
 RUN /build-scripts/install_elixir.sh
