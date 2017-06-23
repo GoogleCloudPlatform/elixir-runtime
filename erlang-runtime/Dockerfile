@@ -31,7 +31,8 @@ ARG ERLANG_VERSION="19.3"
 ARG LANG=en_US.UTF-8
 
 ENV ERLANG_VERSION=$ERLANG_VERSION \
-    LANG=$LANG
+    LANG=$LANG \
+    PATH=/nodejs/bin:$PATH
 
 COPY build-scripts /build-scripts
 RUN /build-scripts/install_erlang.sh && \
