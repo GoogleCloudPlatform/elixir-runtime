@@ -1,6 +1,6 @@
 steps:
   - name: gcr.io/cloud-builders/docker
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang193:$_TAG', '--build-arg', 'ERLANG_VERSION=20.0-1', 'erlang-runtime']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/erlang200:$_TAG', '--build-arg', 'ERLANG_VERSION=20.0-1', 'erlang-runtime']
     waitFor: ['-']
     id: erlang-200
 

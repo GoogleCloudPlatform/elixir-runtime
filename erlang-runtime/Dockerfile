@@ -36,4 +36,5 @@ ENV ERLANG_VERSION=$ERLANG_VERSION \
 
 COPY build-scripts /build-scripts
 RUN /build-scripts/install_erlang.sh && \
-    /build-scripts/set_locale.sh
+    /build-scripts/set_locale.sh && \
+    /build-scripts/install_nodejs.sh
