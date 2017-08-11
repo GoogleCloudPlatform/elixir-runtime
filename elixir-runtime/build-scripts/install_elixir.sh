@@ -13,3 +13,7 @@ curl https://packages.erlang-solutions.com/erlang/elixir/FLAVOUR_2_download/elix
 dpkg -i /tmp/elixir.deb
 
 rm /tmp/elixir.deb
+
+# install hex and rebar
+mix local.hex --force
+mix local.rebar --force
