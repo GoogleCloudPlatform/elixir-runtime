@@ -1,0 +1,119 @@
+################################################################################
+## This Dockerfile builds an Elixir application for the Google App Engine
+## Flexible Environment. It may be modified and used as an App Engine "custom
+## runtime", or even ported to a different Docker-based hosting environment.
+##
+## Generated at: <%= @timestamp %>
+## From configuration: <%= @app_config.app_yaml_path %>
+## Project: <%= @app_config.project_id %>
+## Service: <%= @app_config.service_name %>
+################################################################################
+
+
+################################################################################
+## 1. Augmented base image
+## From a specific snapshot of the base image, installs the application's
+## desired version of Ruby and any needed Debian packages. Any software needed
+## by both the application's build scripts and the final application runtime
+## should be installed here.
+
+FROM <%= @base_image %> AS augmented-base
+
+## If your application needs to install additional Debian packages, do so here.
+<% if @app_config.install_packages.empty? %>
+# RUN apt-get update -y
+# RUN apt-get install -y -q package-name another-package-name
+# RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
+<% else %>
+RUN apt-get update -y
+RUN apt-get install -y -q <%= @app_config.install_packages.join(' ') %>
+RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
+<% end %>
+
+## Feel free to install any other software needed by both the build process
+## (stage 2 below) and the final application runtime.
+
+
+################################################################################
+## 2. Application build
+## From the augmented base image, installs any provided bundle, and runs any
+## requested build jobs, such as preparation of JavaScript and CSS assets.
+## This stage should prepare the /app directory exactly the way needed to run
+## the final application.
+
+FROM augmented-base AS app-build
+
+## Obtain common build tools, including nodejs, yarn, cloud_sql_proxy, and the
+## access_cloud_sql script, from this image.
+COPY --from=<%= @build_tools_image %> /build_tools/ /build_tools/
+
+## Ensure the above tools are in the PATH
+ENV PATH /build_tools:/build_tools/nodejs/bin:/build_tools/yarn/bin:${PATH}
+
+## Copy the application files.
+COPY . /app/
+
+## If your build scripts need any environment variables, set them here.
+## Generally, these will come from the application's app engine configuration.
+<% if @app_config.env_variables.empty? %>
+# ENV NAME="value"
+<% else %>
+ENV <%= render_env @app_config.env_variables %>
+<% end %>
+
+## If your build scripts need access to your application's CloudSQL instances,
+## list them here, comma-delimited. This environment variable tells the
+## "access_cloud_sql" script which databases to connect to.
+## Also, make sure the /cloudsql directory is created because the CloudSQL
+## Proxy will open sockets in that directory.
+<% if @app_config.cloud_sql_instances.empty? %>
+# ARG BUILD_CLOUDSQL_INSTANCES="my-project:db-region:db-name"
+# RUN mkdir /cloudsql
+<% else %>
+ARG BUILD_CLOUDSQL_INSTANCES="<%= @app_config.cloud_sql_instances.join(',') %>"
+RUN mkdir /cloudsql
+<% end %>
+
+## If your build scripts need credentials for access to cloud resources, you
+## may provide an appropriate JSON credentials file and set the
+## GOOGLE_APPLICATION_CREDENTIALS path accordingly:
+# COPY my-build-credentials.json /build_tools/credentials.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/build_tools/credentials.json
+
+## Install hex dependencies.
+RUN mix deps.get && mix deps.compile
+
+## Compile the application.
+RUN mix compile
+
+## Run application build scripts here.
+## Scripts that require access to the application CloudSQL instances should
+## run /build_tools/access_cloud_sql first to start the cloud_sql_proxy. e.g.
+##   RUN /build_tools/access_cloud_sql && mix my_task
+## Otherwise, simply run each build script in order in a separate RUN command.
+<% if @app_config.build_scripts.empty? %>
+<% if @app_config.cloud_sql_instances.empty? %>
+# RUN mix my_task
+<% else %>
+# RUN /build_tools/access_cloud_sql && mix my_task
+<% end %>
+<% else %>
+<% @app_config.build_scripts.each do |script| %>
+RUN <%= script %>
+<% end %>
+<% end %>
+
+
+################################################################################
+## 3. Application image
+## From the augmented base image, installs the application directory built in
+## stage 2 above, and sets the entrypoint. This is the final image that is
+## executed by Google App Engine.
+
+FROM augmented-base
+
+## Copy built application from build stage
+COPY --from=app-build /app/ /app/
+
+## Command to start application.
+CMD <%= @app_config.entrypoint %>

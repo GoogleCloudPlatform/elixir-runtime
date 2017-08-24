@@ -12,15 +12,18 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-# Dockerfile for Running Erlang
 
-ARG ERLANG_IMAGE
-FROM $ERLANG_IMAGE
+# Use the Ruby base image to get Ruby and its dependencies.
+FROM gcr.io/google-appengine/ruby:latest
 
-ARG ELIXIR_VERSION="1.4.1"
+ARG BASE_IMAGE=elixir-base
+ARG BUILD_TOOLS_IMAGE=elixir-build-tools
 
-ENV ELIXIR_VERSION=$ELIXIR_VERSION \
-    MIX_ENV=prod
+# Install the Dockerfile generation script and templates.
+COPY app/ /app/
 
-COPY build-scripts /build-scripts
-RUN /build-scripts/install_elixir.sh
+ENV ELIXIR_BASE_IMAGE=$BASE_IMAGE \
+    ELIXIR_BUILD_TOOLS_IMAGE=$BUILD_TOOLS_IMAGE
+
+# The entry point runs the generation script.
+ENTRYPOINT ["/app/generate_dockerfile.sh"]

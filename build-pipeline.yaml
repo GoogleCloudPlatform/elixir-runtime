@@ -1,0 +1,20 @@
+steps:
+  - name: gcr.io/cloud-builders/docker
+    args: ['pull', 'gcr.io/$_BASE_PROJECT_ID/elixir:$_BASE_TAG']
+  - name: gcr.io/cloud-builders/docker
+    args: ['tag', 'gcr.io/$_BASE_PROJECT_ID/elixir:$_BASE_TAG', 'elixir-base']
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', 'elixir-build-tools', 'elixir-build-tools']
+  - name: gcr.io/cloud-builders/docker
+    args: ['build', '-t', 'elixir-generate-dockerfile',
+           '--build-arg', 'BASE_IMAGE=gcr.io/$_BASE_PROJECT_ID/elixir:$_BASE_TAG',
+           '--build-arg', 'BUILD_TOOLS_IMAGE=gcr.io/$PROJECT_ID/elixir/build-tools:$_TAG',
+           'elixir-generate-dockerfile']
+  - name: gcr.io/cloud-builders/docker
+    args: ['tag', 'elixir-build-tools', 'gcr.io/$PROJECT_ID/elixir/build-tools:$_TAG']
+  - name: gcr.io/cloud-builders/docker
+    args: ['tag', 'elixir-generate-dockerfile', 'gcr.io/$PROJECT_ID/elixir/generate-dockerfile:$_TAG']
+
+images:
+  - gcr.io/$PROJECT_ID/elixir/build-tools:$_TAG
+  - gcr.io/$PROJECT_ID/elixir/generate-dockerfile:$_TAG

@@ -1,5 +1,6 @@
 #!/bin/bash
-# Copyright 2015 Google Inc.
+
+# Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -13,8 +14,9 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-set -ex
 
-# Install node
-mkdir /nodejs
-curl https://nodejs.org/dist/v6.10.3/node-v6.10.3-linux-x64.tar.gz | tar xvzf - -C /nodejs --strip-components=1
+set -e
+
+WORKSPACE_DIR=$(/bin/pwd)
+cd /app
+ruby generate_dockerfile.rb --workspace-dir=${WORKSPACE_DIR} --base-image=${ELIXIR_BASE_IMAGE} --build-tools-image=${ELIXIR_BUILD_TOOLS_IMAGE} "$@"

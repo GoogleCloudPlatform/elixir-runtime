@@ -1,14 +1,32 @@
-# Docker image for the App Engine Flexible Elixir/Erlang runtimes
+# Elixir Runtime for Google Cloud Platform
 
-This respository contains a runtime definition for Elixir and Erlang for Google App Engine Flexible Environment
-and other Docker hosts. It is not covered by any SLA or deprecation policy. It may change at any time.
+This repository contains the source for the Elixir runtime for the
+[Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/)
+and other Docker-based hosting environments. It is not covered by any SLA or
+deprecation policy. It may change at any time.
+
+It comprises:
+
+* A base image for Elixir-based applications
+* A build pipeline that generates a Docker image from an Elixir application
 
 ## Building
 
-The following command builds many versions of the Erlang and Elixir runtime images using
-[Google Cloud Container Builder](https://cloud.google.com/container-builder/). Replace the `_TAG` value
-with whatever you want the final docker images' tag to be exported as.
+To build the Elixir runtime, run the `build-base.sh` and `build-pipeline.sh`
+scripts. These build the base image and build pipeline, respectively, using
+[Google Cloud Container Builder](https://cloud.google.com/container-builder/),
+and posting the results to
+[Google Container Registry](https://cloud.google.com/container-registry/).
 
-```bash
-gcloud container builds submit --config cloudbuild.yaml --substitutions _TAG=dev
-```
+You may choose the project to build to and Docker tags for your build, as well
+as whether to mark your build as staging. The pipeline script also optionally
+generates and uploads the runtime pipeline configuration file. Use the `-h`
+switch on each script to show usage information.
+
+## Contributing changes
+
+* See [CONTRIBUTING.md](CONTRIBUTING.md)
+
+## License
+
+* See [LICENSE](LICENSE)
