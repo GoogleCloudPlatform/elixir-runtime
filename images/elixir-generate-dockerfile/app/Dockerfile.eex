@@ -4,9 +4,9 @@
 ## runtime", or even ported to a different Docker-based hosting environment.
 ##
 ## Generated at: <%= @timestamp %>
-## From configuration: <%= @app_config.app_yaml_path %>
-## Project: <%= @app_config.project_id %>
-## Service: <%= @app_config.service_name %>
+## From configuration: <%= @app_yaml_path %>
+## Project: <%= @project_id %>
+## Service: <%= @service_name %>
 ################################################################################
 
 
@@ -20,13 +20,13 @@
 FROM <%= @base_image %> AS augmented-base
 
 ## If your application needs to install additional Debian packages, do so here.
-<% if @app_config.install_packages.empty? %>
+<%= if @install_packages == "" do %>
 # RUN apt-get update -y
 # RUN apt-get install -y -q package-name another-package-name
 # RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
 <% else %>
 RUN apt-get update -y
-RUN apt-get install -y -q <%= @app_config.install_packages.join(' ') %>
+RUN apt-get install -y -q <%= @install_packages %>
 RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
 <% end %>
 
@@ -55,10 +55,10 @@ COPY . /app/
 
 ## If your build scripts need any environment variables, set them here.
 ## Generally, these will come from the application's app engine configuration.
-<% if @app_config.env_variables.empty? %>
+<%= if @env_variables == "" do %>
 # ENV NAME="value"
 <% else %>
-ENV <%= render_env @app_config.env_variables %>
+ENV <%= @env_variables %>
 <% end %>
 
 ## If your build scripts need access to your application's CloudSQL instances,
@@ -66,11 +66,11 @@ ENV <%= render_env @app_config.env_variables %>
 ## "access_cloud_sql" script which databases to connect to.
 ## Also, make sure the /cloudsql directory is created because the CloudSQL
 ## Proxy will open sockets in that directory.
-<% if @app_config.cloud_sql_instances.empty? %>
+<%= if @cloud_sql_instances == "" do %>
 # ARG BUILD_CLOUDSQL_INSTANCES="my-project:db-region:db-name"
 # RUN mkdir /cloudsql
 <% else %>
-ARG BUILD_CLOUDSQL_INSTANCES="<%= @app_config.cloud_sql_instances.join(',') %>"
+ARG BUILD_CLOUDSQL_INSTANCES="<%= @cloud_sql_instances %>"
 RUN mkdir /cloudsql
 <% end %>
 
@@ -80,27 +80,16 @@ RUN mkdir /cloudsql
 # COPY my-build-credentials.json /build_tools/credentials.json
 # ENV GOOGLE_APPLICATION_CREDENTIALS=/build_tools/credentials.json
 
-## Install hex dependencies.
-RUN mix deps.get && mix deps.compile
-
-## Compile the application.
-RUN mix compile
+## Install dependencies and compile the application.
+RUN mix deps.get && mix compile
 
 ## Run application build scripts here.
 ## Scripts that require access to the application CloudSQL instances should
-## run /build_tools/access_cloud_sql first to start the cloud_sql_proxy. e.g.
+## run /build_tools/access_cloud_sql first to start the CloudSQL Proxy. e.g.
 ##   RUN /build_tools/access_cloud_sql && mix my_task
 ## Otherwise, simply run each build script in order in a separate RUN command.
-<% if @app_config.build_scripts.empty? %>
-<% if @app_config.cloud_sql_instances.empty? %>
-# RUN mix my_task
-<% else %>
-# RUN /build_tools/access_cloud_sql && mix my_task
-<% end %>
-<% else %>
-<% @app_config.build_scripts.each do |script| %>
-RUN <%= script %>
-<% end %>
+<%= if @build_scripts != "" do %>
+<%= @build_scripts %>
 <% end %>
 
 
@@ -116,4 +105,4 @@ FROM augmented-base
 COPY --from=app-build /app/ /app/
 
 ## Command to start application.
-CMD <%= @app_config.entrypoint %>
+CMD <%= @entrypoint %>

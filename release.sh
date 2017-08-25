@@ -20,21 +20,21 @@ set -e
 DIRNAME=$(dirname $0)
 
 PROJECT=
-NAMESPACE="runtime"
+NAMESPACE="elixir"
 IMAGE_TAG="staging"
 UPLOAD_BUCKET=
 
 show_usage() {
   echo "Usage: ./release.sh [-p <project>] [-t <image-tag>]" >&2
   echo "Flags:" >&2
-  echo '  -b: set the gcs bucket to upload the cloudbuild pipeline to (defaults to no upload)' >&2
-  echo '  -n: set the image namespace (defaults to runtime)' >&2
-  echo '  -p: set the images project (defaults to gcloud config)' >&2
-  echo '  -t: the image tag to release (defaults to staging)' >&2
+  echo '  -b <bucket>: promote the runtime definition in this gcs bucket (defaults to no promote)' >&2
+  echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
+  echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
+  echo '  -t <tag>: the image tag to release (defaults to `staging`)' >&2
 }
 
 OPTIND=1
-while getopts ":p:t:b:h" opt; do
+while getopts ":b:n:p:t:h" opt; do
   case $opt in
     b)
       UPLOAD_BUCKET=$OPTARG

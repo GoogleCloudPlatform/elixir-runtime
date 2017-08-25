@@ -12,25 +12,39 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+defmodule GenerateDockerfile.Mixfile do
+  use Mix.Project
 
-# Use the Ruby base image to get Ruby and its dependencies.
-FROM elixir-base
+  def project do
+    [
+      app: :generate_dockerfile,
+      version: "0.1.0",
+      elixir: "~> 1.5",
+      start_permanent: Mix.env == :prod,
+      escript: escript(),
+      deps: deps()
+    ]
+  end
 
-ARG BASE_IMAGE=elixir-base
-ARG BUILD_TOOLS_IMAGE=elixir-build-tools
+  def application do
+    [
+      applications: [
+        :logger,
+        :yaml_elixir
+      ]
+    ]
+  end
 
-# Install the wrapper script and template.
-COPY app/ /app/
+  def escript do
+    [
+      main_module: GenerateDockerfile
+    ]
+  end
 
-# Build the Dockerfile generation script
-COPY src/ /src/
-RUN cd /src \
-    && mix deps.get \
-    && mix escript.build \
-    && mv generate_dockerfile /app/
-
-ENV ELIXIR_BASE_IMAGE=$BASE_IMAGE \
-    ELIXIR_BUILD_TOOLS_IMAGE=$BUILD_TOOLS_IMAGE
-
-# The entry point runs the generation script.
-ENTRYPOINT ["/app/generate_dockerfile.sh"]
+  defp deps do
+    [
+      {:yaml_elixir, "~> 1.3"},
+      {:poison, "~> 3.1"}
+    ]
+  end
+end

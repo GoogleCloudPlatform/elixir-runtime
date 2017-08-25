@@ -19,4 +19,4 @@ set -e
 
 WORKSPACE_DIR=$(/bin/pwd)
 cd /app
-ruby generate_dockerfile.rb --workspace-dir=${WORKSPACE_DIR} --base-image=${ELIXIR_BASE_IMAGE} --build-tools-image=${ELIXIR_BUILD_TOOLS_IMAGE} "$@"
+./generate_dockerfile --dockerfile-template=Dockerfile.eex --workspace-dir=${WORKSPACE_DIR} --base-image=${ELIXIR_BASE_IMAGE} --build-tools-image=${ELIXIR_BUILD_TOOLS_IMAGE} "$@"
