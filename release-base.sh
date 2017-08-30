@@ -20,38 +20,23 @@ set -e
 DIRNAME=$(dirname $0)
 
 PROJECT=
-IMAGE_TAG="new"
-STAGING_FLAG=
-ERLANG_PACKAGE="1:20.0-1"
-ELIXIR_PACKAGE="1.5.1-1"
+IMAGE_TAG="staging"
 
 show_usage() {
-  echo "Usage: ./build-base.sh [-p <project>] [-t <image-tag>] [-s]" >&2
+  echo "Usage: ./release-base.sh [-p <project>] [-t <image-tag>]" >&2
   echo "Flags:" >&2
-  echo '  -e: request a specific Erlang package version' >&2
-  echo '  -x: request a specific Elixir package version' >&2
   echo '  -p: set the base image project (defaults to gcloud config)' >&2
-  echo '  -t: set the base image tag (defaults to new)' >&2
-  echo '  -s: also tag new image as staging' >&2
+  echo '  -t: the base image tag to release (defaults to staging)' >&2
 }
 
 OPTIND=1
-while getopts ":e:p:t:sx:h" opt; do
+while getopts ":p:t:h" opt; do
   case $opt in
-    e)
-      ERLANG_PACKAGE=$OPTARG
-      ;;
-    x)
-      ELIXIR_PACKAGE=$OPTARG
-      ;;
     p)
       PROJECT=$OPTARG
       ;;
     t)
       IMAGE_TAG=$OPTARG
-      ;;
-    s)
-      STAGING_FLAG="true"
       ;;
     h)
       show_usage
@@ -73,24 +58,12 @@ while getopts ":e:p:t:sx:h" opt; do
 done
 shift $((OPTIND-1))
 
-if [ "$IMAGE_TAG" = "new" ]; then
-  IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
-  echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
-fi
-
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
   echo "Using project from gcloud config: $PROJECT" >&2
 fi
 
-gcloud container builds submit images \
-  --config $DIRNAME/build-base.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_ERLANG_PACKAGE=$ERLANG_PACKAGE,_ELIXIR_PACKAGE=$ELIXIR_PACKAGE
-echo "Built base image as gcr.io/$PROJECT/elixir:$IMAGE_TAG"
-
-if [ "$STAGING_FLAG" = "true" ]; then
-  gcloud container images add-tag --project $PROJECT \
-    gcr.io/$PROJECT/elixir:$IMAGE_TAG \
-    gcr.io/$PROJECT/elixir:staging -q
-  echo "Tagged base image as gcr.io/$PROJECT/elixir:staging"
-fi
+gcloud container images add-tag --project $PROJECT \
+  gcr.io/$PROJECT/elixir:$IMAGE_TAG \
+  gcr.io/$PROJECT/elixir:latest -q
+echo "Tagged base image gcr.io/$PROJECT/elixir:$IMAGE_TAG as latest"

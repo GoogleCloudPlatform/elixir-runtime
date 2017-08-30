@@ -31,8 +31,8 @@ show_usage() {
   echo "       [-t <image-tag>] [-i <base-image-tag>] [-b <upload-bucket>] [-s]" >&2
   echo "Flags:" >&2
   echo '  -p: set the build pipeline images project (defaults to gcloud config)' >&2
-  echo '  -q: set the base images project (defaults to gcloud config)' >&2
-  echo '  -i: set the base images tag (defaults to staging)' >&2
+  echo '  -q: set the base image project (defaults to gcloud config)' >&2
+  echo '  -i: set the base image tag (defaults to staging)' >&2
   echo '  -t: set the new images tag (defaults to same)' >&2
   echo '  -b: set the gcs bucket to upload the cloudbuild pipeline to (defaults to no upload)' >&2
   echo '  -s: also tag new images as staging' >&2
@@ -81,12 +81,12 @@ shift $((OPTIND-1))
 
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "Using project from gcloud config: $PROJECT" >&2
+  echo "Using builder project from gcloud config: $PROJECT" >&2
 fi
 
 if [ -z "$BASE_IMAGE_PROJECT" ]; then
   BASE_IMAGE_PROJECT=$(gcloud config get-value project)
-  echo "Using project from gcloud config: $BASE_IMAGE_PROJECT" >&2
+  echo "Using base image project from gcloud config: $BASE_IMAGE_PROJECT" >&2
 fi
 
 if [ "$BASE_IMAGE_TAG" = "staging" -o "$BASE_IMAGE_TAG" = "latest" ]; then
@@ -107,6 +107,7 @@ fi
 gcloud container builds submit images \
   --config $DIRNAME/build-pipeline.yaml --project $PROJECT \
   --substitutions _TAG=$IMAGE_TAG,_BASE_TAG=$BASE_IMAGE_TAG,_BASE_PROJECT_ID=$BASE_IMAGE_PROJECT
+echo "Built image: gcr.io/$PROJECT/elixir/generate-dockerfile:$IMAGE_TAG"
 
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
@@ -115,6 +116,7 @@ if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
     gcr.io/$PROJECT/elixir/generate-dockerfile:$IMAGE_TAG \
     gcr.io/$PROJECT/elixir/generate-dockerfile:staging -q
+  echo "Tagged image as gcr.io/$PROJECT/elixir/generate-dockerfile:staging"
 fi
 
 if [ -n "$UPLOAD_BUCKET" ]; then
@@ -122,7 +124,9 @@ if [ -n "$UPLOAD_BUCKET" ]; then
   sed -e "s|\$PROJECT|${PROJECT}|g; s|\$TAG|${IMAGE_TAG}|g" \
     < $DIRNAME/elixir.yaml.in > $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml
   gsutil cp $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml
+  echo "Created runtime config: gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml"
   if [ "$STAGING_FLAG" = "true" ]; then
-    gsutil cp $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml gs://$UPLOAD_BUCKET/elixir-staging.yaml
+    gsutil cp gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml gs://$UPLOAD_BUCKET/elixir-staging.yaml
+    echo "Set staging runtime config: gs://$UPLOAD_BUCKET/elixir-staging.yaml"
   fi
 fi
