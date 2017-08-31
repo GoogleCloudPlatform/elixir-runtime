@@ -31,7 +31,7 @@ show_usage() {
   echo "       [-t <image-tag>] [-i <base-image-tag>] [-b <upload-bucket>] [-s]" >&2
   echo "Flags:" >&2
   echo '  -p: set the build pipeline images project (defaults to gcloud config)' >&2
-  echo '  -q: set the base image project (defaults to gcloud config)' >&2
+  echo '  -q: set the base image project (defaults to same as build pipeline project)' >&2
   echo '  -i: set the base image tag (defaults to staging)' >&2
   echo '  -t: set the new images tag (defaults to same)' >&2
   echo '  -b: set the gcs bucket to upload the cloudbuild pipeline to (defaults to no upload)' >&2
@@ -81,12 +81,11 @@ shift $((OPTIND-1))
 
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "Using builder project from gcloud config: $PROJECT" >&2
+  echo "Using project from gcloud config: $PROJECT" >&2
 fi
 
 if [ -z "$BASE_IMAGE_PROJECT" ]; then
-  BASE_IMAGE_PROJECT=$(gcloud config get-value project)
-  echo "Using base image project from gcloud config: $BASE_IMAGE_PROJECT" >&2
+  BASE_IMAGE_PROJECT=$PROJECT
 fi
 
 if [ "$BASE_IMAGE_TAG" = "staging" -o "$BASE_IMAGE_TAG" = "latest" ]; then
