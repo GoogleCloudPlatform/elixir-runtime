@@ -20,28 +20,33 @@ set -e
 DIRNAME=$(dirname $0)
 
 PROJECT=
+NAMESPACE="runtime"
 IMAGE_TAG="staging"
 UPLOAD_BUCKET=
 
 show_usage() {
-  echo "Usage: ./release-pipeline.sh [-p <project>] [-t <image-tag>]" >&2
+  echo "Usage: ./release.sh [-p <project>] [-t <image-tag>]" >&2
   echo "Flags:" >&2
-  echo '  -p: set the build pipeline images project (defaults to gcloud config)' >&2
-  echo '  -t: the image tag to release (defaults to staging)' >&2
   echo '  -b: set the gcs bucket to upload the cloudbuild pipeline to (defaults to no upload)' >&2
+  echo '  -n: set the image namespace (defaults to runtime)' >&2
+  echo '  -p: set the images project (defaults to gcloud config)' >&2
+  echo '  -t: the image tag to release (defaults to staging)' >&2
 }
 
 OPTIND=1
 while getopts ":p:t:b:h" opt; do
   case $opt in
+    b)
+      UPLOAD_BUCKET=$OPTARG
+      ;;
+    n)
+      NAMESPACE=$OPTARG
+      ;;
     p)
       PROJECT=$OPTARG
       ;;
     t)
       IMAGE_TAG=$OPTARG
-      ;;
-    b)
-      UPLOAD_BUCKET=$OPTARG
       ;;
     h)
       show_usage
@@ -65,18 +70,23 @@ shift $((OPTIND-1))
 
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "Using project from gcloud config: $PROJECT" >&2
+  echo "**** Using project from gcloud config: $PROJECT" >&2
 fi
 
 gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/elixir/build-tools:$IMAGE_TAG \
-  gcr.io/$PROJECT/elixir/build-tools:latest -q
+  gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/base:latest -q
+echo "**** Tagged base image gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG as latest"
 gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/elixir/generate-dockerfile:$IMAGE_TAG \
-  gcr.io/$PROJECT/elixir/generate-dockerfile:latest -q
-echo "Tagged image gcr.io/$PROJECT/elixir/generate-dockerfile:$IMAGE_TAG as latest"
+  gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/build-tools:latest -q
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG as latest"
+gcloud container images add-tag --project $PROJECT \
+  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:latest -q
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG as latest"
 
 if [ -n "$UPLOAD_BUCKET" ]; then
   gsutil cp gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml gs://$UPLOAD_BUCKET/elixir.yaml
-  echo "Promoted runtime config gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml to gs://$UPLOAD_BUCKET/elixir.yaml"
+  echo "**** Promoted runtime config gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml to gs://$UPLOAD_BUCKET/elixir.yaml"
 fi
