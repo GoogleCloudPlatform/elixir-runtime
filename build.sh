@@ -19,8 +19,8 @@ set -e
 
 DIRNAME=$(dirname $0)
 
-DEFAULT_ERLANG_PACKAGE="1:20.0-1"
-DEFAULT_ELIXIR_PACKAGE="1.5.1-1"
+DEFAULT_ERLANG_PACKAGE="1:20.1-1"
+DEFAULT_ELIXIR_PACKAGE="1.5.2-1"
 
 PROJECT=
 NAMESPACE="elixir"
@@ -108,6 +108,7 @@ if [ -z "$ELIXIR_PACKAGE" ]; then
   echo "Using default Elixir package version: $ELIXIR_PACKAGE" >&2
 fi
 
+echo
 echo "Building base, tools, and dockerfile generator images:"
 echo "  gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG"
@@ -134,23 +135,35 @@ if [ -z "$AUTO_YES" ]; then
     exit 1
   fi
 fi
+echo
 
-gcloud container builds submit images \
-  --config $DIRNAME/cloudbuild.yaml --project $PROJECT \
+gcloud container builds submit $DIRNAME/elixir-base \
+  --config $DIRNAME/elixir-base/cloudbuild.yaml --project $PROJECT \
   --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ERLANG_PACKAGE=$ERLANG_PACKAGE,_ELIXIR_PACKAGE=$ELIXIR_PACKAGE
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
-echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG"
-echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG"
-
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
     gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG \
     gcr.io/$PROJECT/$NAMESPACE/base:staging -q
   echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/base:staging"
+fi
+
+gcloud container builds submit $DIRNAME/elixir-build-tools \
+  --config $DIRNAME/elixir-build-tools/cloudbuild.yaml --project $PROJECT \
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG"
+if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
     gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG \
     gcr.io/$PROJECT/$NAMESPACE/build-tools:staging -q
   echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/build-tools:staging"
+fi
+
+gcloud container builds submit $DIRNAME/elixir-generate-dockerfile \
+  --config $DIRNAME/elixir-generate-dockerfile/cloudbuild.yaml --project $PROJECT \
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG"
+if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
     gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG \
     gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:staging -q

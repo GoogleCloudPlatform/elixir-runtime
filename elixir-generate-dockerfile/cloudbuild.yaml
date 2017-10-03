@@ -1,0 +1,13 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['pull', 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['tag', 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG', 'elixir-base']
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/generate-dockerfile:$_TAG',
+           '--build-arg', 'BASE_IMAGE=gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG',
+           '--build-arg', 'BUILD_TOOLS_IMAGE=gcr.io/$PROJECT_ID/$_NAMESPACE/build-tools:$_TAG',
+           '.']
+
+images:
+  - 'gcr.io/$PROJECT_ID/$_NAMESPACE/generate-dockerfile:$_TAG'

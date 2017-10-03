@@ -23,7 +23,8 @@ ARG ELIXIR_PACKAGE_VERSION
 # Install base packages and set up locale
 RUN apt-get update -y \
     && apt-get -y upgrade \
-    && apt-get install -y -q --no-install-recommends apt-utils curl locales \
+    && apt-get install -y -q --no-install-recommends \
+        apt-utils curl git locales \
     && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
     && locale-gen en_US.UTF-8
 

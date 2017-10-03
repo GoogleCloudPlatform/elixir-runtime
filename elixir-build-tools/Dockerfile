@@ -19,22 +19,23 @@
 FROM elixir-base AS builder
 
 # Install build script files.
-COPY app/ /app/
+RUN mkdir /build_tools
+COPY access_cloud_sql /build_tools/
 
 # Install NodeJS
-RUN mkdir /app/nodejs \
-    && curl -s https://nodejs.org/dist/v6.11.2/node-v6.11.2-linux-x64.tar.gz \
-      | tar xzf - --directory=/app/nodejs --strip-components=1
+RUN mkdir /build_tools/nodejs \
+    && curl -s https://nodejs.org/dist/v6.11.3/node-v6.11.3-linux-x64.tar.gz \
+      | tar xzf - --directory=/build_tools/nodejs --strip-components=1
 
 # Install Yarn
-RUN mkdir /app/yarn \
+RUN mkdir /build_tools/yarn \
     && curl -s -L https://yarnpkg.com/latest.tar.gz \
-      | tar xzf - --directory=/app/yarn --strip-components=1
+      | tar xzf - --directory=/build_tools/yarn --strip-components=1
 
 # Install CloudSQL Proxy
 RUN curl -s https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 \
-      > /app/cloud_sql_proxy \
-    && chmod a+x /app/cloud_sql_proxy
+      > /build_tools/cloud_sql_proxy \
+    && chmod a+x /build_tools/cloud_sql_proxy
 
 
 # Generate a minimal image with only the tool files themselves. This image
@@ -42,4 +43,4 @@ RUN curl -s https://dl.google.com/cloudsql/cloud_sql_proxy.linux.amd64 \
 
 FROM scratch
 
-COPY --from=builder /app/ /build_tools/
+COPY --from=builder /build_tools/ /build_tools/

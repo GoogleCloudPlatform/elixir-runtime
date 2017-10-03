@@ -1,0 +1,9 @@
+steps:
+  - name: 'gcr.io/cloud-builders/docker'
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG',
+           '--build-arg', 'ERLANG_PACKAGE_VERSION=$_ERLANG_PACKAGE',
+           '--build-arg', 'ELIXIR_PACKAGE_VERSION=$_ELIXIR_PACKAGE',
+           '.']
+
+images:
+  - 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG'
