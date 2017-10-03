@@ -172,7 +172,7 @@ fi
 
 mkdir -p $DIRNAME/tmp
 sed -e "s|\$PROJECT|${PROJECT}|g; s|\$NAMESPACE|${NAMESPACE}|g; s|\$TAG|${IMAGE_TAG}|g" \
-  < $DIRNAME/elixir.yaml.in > $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml
+  < $DIRNAME/elixir-pipeline/elixir.yaml.in > $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml
 echo "**** Created runtime config: $DIRNAME/tmp/elixir-$IMAGE_TAG.yaml"
 
 if [ -n "$UPLOAD_BUCKET" ]; then
