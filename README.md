@@ -1,5 +1,7 @@
 # Elixir Runtime for Google Cloud Platform
 
+[![Travis-CI Build Status](https://travis-ci.org/GoogleCloudPlatform/elixir-runtime.svg)](https://travis-ci.org/GoogleCloudPlatform/elixir-runtime/)
+
 This repository contains the source for the Elixir Runtime for the
 [Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/)
 and other Docker-based hosting environments. It is not covered by any SLA or
