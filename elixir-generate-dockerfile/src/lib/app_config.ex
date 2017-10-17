@@ -227,17 +227,33 @@ defmodule GenerateDockerfile.AppConfig do
 
   defp default_build_scripts(_workspace_dir, nil), do: []
   defp default_build_scripts(workspace_dir, phoenix_prefix) do
-    cond do
-      File.regular?(Path.join(workspace_dir, "package.json")) &&
-          File.regular?(Path.join(workspace_dir, "brunch-config.js")) ->
-        Logger.info("Installing brunch build and phoenix digest as a default build step.")
-        ["npm install && node_modules/brunch/bin/brunch build --production && mix #{phoenix_prefix}.digest"]
-      File.regular?(Path.join([workspace_dir, "assets", "package.json"])) &&
-          File.regular?(Path.join([workspace_dir, "assets", "brunch-config.js"])) ->
-        Logger.info("Installing brunch build and phoenix digest as a default build step.")
-        ["cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix #{phoenix_prefix}.digest"]
-      true ->
-        []
+    case find_brunch_configs_relative_dir(workspace_dir) do
+      nil -> []
+      "." -> ["npm install && node_modules/brunch/bin/brunch build --production && mix #{phoenix_prefix}.digest"]
+      relative_dir -> ["cd #{relative_dir} && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix #{phoenix_prefix}.digest"]
+    end
+  end
+
+  defp find_brunch_configs_relative_dir(workspace_dir) do
+    apps_dir = Path.join(workspace_dir, "apps")
+    app_dirs = if File.dir?(apps_dir) do
+      apps_dir
+      |> File.ls!
+      |> Enum.map(fn child -> Path.join(apps_dir, child) end)
+      |> Enum.filter(fn path -> File.dir?(path) end)
+    else
+      []
+    end
+
+    [workspace_dir | app_dirs]
+    |> Enum.flat_map(fn dir -> [dir, Path.join(dir, "assets")] end)
+    |> Enum.find(fn dir ->
+      File.regular?(Path.join(dir, "package.json")) && File.regular?(Path.join(dir, "brunch-config.js"))
+    end)
+    |> case do
+      nil -> nil
+      ^workspace_dir -> "."
+      brunch_dir -> Path.relative_to(brunch_dir, workspace_dir)
     end
   end
 

@@ -134,6 +134,13 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:build_scripts, pid) == ["cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"]
   end
 
+  test "phoenix umbrella 1.3 defaults" do
+    pid = AppConfigTest.setup_test("phoenix_umbrella_1_3", @minimal_config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
+    assert AppConfig.get!(:build_scripts, pid) == ["cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"]
+  end
+
   test "phoenix 1.2 defaults" do
     pid = AppConfigTest.setup_test("phoenix_1_2", @minimal_config)
     assert AppConfig.status(pid) == :ok
