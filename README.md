@@ -4,8 +4,8 @@
 
 This repository contains the source for the Elixir Runtime for the
 [Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/),
-[Google Container Engine](https://cloud.google.com/container-engine), 
-[Kubernetes](https://kubernetes.io), and other Docker-based hosting environments. 
+[Google Container Engine](https://cloud.google.com/container-engine),
+[Kubernetes](https://kubernetes.io), and other Docker-based hosting environments.
 It is not covered by any SLA or deprecation policy. It may change at any time.
 
 ## Using the Elixir Runtime
