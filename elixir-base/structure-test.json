@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "commandTests": [
+    {
+      "name": "test_elixir_installation",
+      "command": ["elixir", "--version"],
+      "expectedOutput": ["Elixir [0-9]+\\.[0-9]+\\.[0-9]+\n"]
+    },
+    {
+      "name": "test_mix_env_var",
+      "command": ["elixir", "-e", "\"MIX_ENV\" |> System.get_env |> IO.puts"],
+      "expectedOutput": ["prod\n"]
+    }
+  ]
+}

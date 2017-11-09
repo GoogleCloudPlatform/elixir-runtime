@@ -22,7 +22,6 @@ defmodule GenerateDockerfileSrcTest do
       assert_command("mix", ["clean"])
       File.rm_rf("mix.lock")
       assert_command("mix", ["deps.get"])
-      assert_command("mix", ["compile"])
       IO.puts("**** Running generate-dockerfile tests.")
       assert_command("mix", ["test"])
       IO.puts("**** Completed generate-dockerfile tests.")

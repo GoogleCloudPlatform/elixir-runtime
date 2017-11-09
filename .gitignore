@@ -1,2 +1,5 @@
 /_build/
+/cover/
+/deps/
+/doc/
 /tmp/
