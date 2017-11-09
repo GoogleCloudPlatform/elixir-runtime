@@ -26,17 +26,17 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   def run(_args) do
     File.cd!("elixir-base", fn ->
-      {_, 0} = System.cmd("docker", ["build", "-t", "elixir-base",
+      {_, 0} = System.cmd("docker", ["build", "--no-cache", "--pull", "-t", "elixir-base",
           "--build-arg", "ERLANG_PACKAGE_VERSION=#{@erlang_package_version}",
           "--build-arg", "ELIXIR_PACKAGE_VERSION=#{@elixir_package_version}",
           "."], into: IO.stream(:stdio, :line))
     end)
     File.cd!("elixir-build-tools", fn ->
-      {_, 0} = System.cmd("docker", ["build", "-t", "elixir-build-tools",
+      {_, 0} = System.cmd("docker", ["build", "--no-cache", "-t", "elixir-build-tools",
           "."], into: IO.stream(:stdio, :line))
     end)
     File.cd!("elixir-generate-dockerfile", fn ->
-      {_, 0} = System.cmd("docker", ["build", "-t", "elixir-generate-dockerfile",
+      {_, 0} = System.cmd("docker", ["build", "--no-cache", "-t", "elixir-generate-dockerfile",
           "."], into: IO.stream(:stdio, :line))
     end)
   end
