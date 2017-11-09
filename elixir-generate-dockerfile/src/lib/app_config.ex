@@ -15,7 +15,6 @@
 defmodule GenerateDockerfile.AppConfig do
   require Logger
 
-  @default_project_id "(unknown)"
   @default_workspace_dir "/workspace"
   @default_app_yaml_path "app.yaml"
   @default_service_name "default"
@@ -45,6 +44,23 @@ defmodule GenerateDockerfile.AppConfig do
 
   use GenServer
 
+  defmodule MetadataFetcher do
+    use Tesla
+
+    plug Tesla.Middleware.Tuples
+    plug Tesla.Middleware.BaseUrl, "http://169.254.169.254"
+    plug Tesla.Middleware.Headers, %{"Metadata-Flavor" => "Google"}
+    plug Tesla.Middleware.Opts, timeout: 100
+
+    def get_project_id do
+      "/computeMetadata/v1/project/project-id" |> get() |> handle_response()
+    end
+
+    def handle_response({:ok, %{status: 200, body: body}}), do: body
+    def handle_response(_), do: nil
+  end
+  alias GenerateDockerfile.AppConfig.MetadataFetcher
+
   def init(args) do
     try do
       workspace_dir = Keyword.get(args, :workspace_dir, @default_workspace_dir)
@@ -60,7 +76,9 @@ defmodule GenerateDockerfile.AppConfig do
   end
 
   defp build_data(workspace_dir) do
-    project_id = System.get_env("PROJECT_ID") || @default_project_id
+    project_id = System.get_env("PROJECT_ID") || MetadataFetcher.get_project_id()
+    project_id_for_display = project_id || "(unknown)"
+    project_id_for_example = project_id || "my-project-id"
 
     deps_info = analyze_deps(workspace_dir)
     phoenix_prefix = get_phoenix_prefix(deps_info)
@@ -81,6 +99,8 @@ defmodule GenerateDockerfile.AppConfig do
     %{
       workspace_dir: workspace_dir,
       project_id: project_id,
+      project_id_for_display: project_id_for_display,
+      project_id_for_example: project_id_for_example,
       app_yaml_path: app_yaml_path,
       runtime_config: runtime_config,
       service_name: service_name,

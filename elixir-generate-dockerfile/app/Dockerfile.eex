@@ -5,19 +5,22 @@
 ##
 ## Generated at: <%= @timestamp %>
 ## From configuration: <%= @app_yaml_path %>
-## Project: <%= @project_id %>
+## Project: <%= @project_id_for_display %>
 ## Service: <%= @service_name %>
 ################################################################################
 
 
 ################################################################################
 ## 1. Augmented base image
-## From a specific snapshot of the base image, installs the application's
-## desired version of Ruby and any needed Debian packages. Any software needed
-## by both the application's build scripts and the final application runtime
-## should be installed here.
+## From a specific snapshot of the base image, installs any additional needed
+## Debian packages. Any software needed by both the application's build scripts
+## and the final application runtime should be installed here.
 
 FROM <%= @base_image %> AS augmented-base
+
+## Prevent some warnings that happen when we're apt-get installing in a
+## non-interactive environment.
+ARG DEBIAN_FRONTEND=noninteractive
 
 ## If your application needs to install additional Debian packages, do so here.
 <%= if @install_packages == "" do %>
@@ -36,19 +39,26 @@ RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 ################################################################################
 ## 2. Application build
-## From the augmented base image, installs any provided bundle, and runs any
-## requested build jobs, such as preparation of JavaScript and CSS assets.
-## This stage should prepare the /app directory exactly the way needed to run
-## the final application.
+## From the augmented base image, installs any dependencies, builds the
+## application, and runs any additional requested build jobs such as
+## preparation of JavaScript and CSS assets. This stage should prepare the /app
+## directory exactly the way needed to run the final application.
 
 FROM augmented-base AS app-build
 
-## Obtain common build tools, including nodejs, yarn, cloud_sql_proxy, and the
-## access_cloud_sql script, from this image.
+## Obtain common build tools, including nodejs, yarn, gcloud, cloud_sql_proxy,
+## and the access_cloud_sql script, from this image.
 COPY --from=<%= @build_tools_image %> /build_tools/ /build_tools/
 
 ## Ensure the above tools are in the PATH
-ENV PATH /build_tools:/build_tools/nodejs/bin:/build_tools/yarn/bin:${PATH}
+ENV PATH /build_tools:/build_tools/google-cloud-sdk/bin:/build_tools/nodejs/bin:/build_tools/yarn/bin:${PATH}
+
+## Set gcloud project here if your build scripts need to use gcloud.
+<% if @project_id %>
+RUN gcloud config set project <%= @project_id %>
+<% else %>
+# RUN gcloud config set project <%= @project_id_for_example %>
+<% end %>
 
 ## Copy the application files.
 COPY . /app/
@@ -67,7 +77,7 @@ ENV <%= @env_variables %>
 ## Also, make sure the /cloudsql directory is created because the CloudSQL
 ## Proxy will open sockets in that directory.
 <%= if @cloud_sql_instances == "" do %>
-# ARG BUILD_CLOUDSQL_INSTANCES="my-project:db-region:db-name"
+# ARG BUILD_CLOUDSQL_INSTANCES="<%= @project_id_for_example %>:db-region:db-name"
 # RUN mkdir /cloudsql
 <% else %>
 ARG BUILD_CLOUDSQL_INSTANCES="<%= @cloud_sql_instances %>"

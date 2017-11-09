@@ -45,7 +45,8 @@ defmodule GenerateDockerfile.Mixfile do
   defp deps do
     [
       {:yaml_elixir, "~> 1.3"},
-      {:poison, "~> 3.1"}
+      {:poison, "~> 3.1"},
+      {:tesla, "~> 0.9"}
     ]
   end
 end

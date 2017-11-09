@@ -60,6 +60,8 @@ defmodule GenerateDockerfile.Generator do
       timestamp: timestamp,
       app_yaml_path: AppConfig.get!(:app_yaml_path),
       project_id: AppConfig.get!(:project_id),
+      project_id_for_display: AppConfig.get!(:project_id_for_display),
+      project_id_for_example: AppConfig.get!(:project_id_for_example),
       service_name: AppConfig.get!(:service_name),
       install_packages: AppConfig.get!(:install_packages) |> Enum.join(" "),
       env_variables: AppConfig.get!(:env_variables) |> render_env,

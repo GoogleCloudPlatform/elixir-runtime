@@ -13,7 +13,17 @@
 # limitations under the License.
 
 
-# Use the Ruby base image to get Ruby and its dependencies.
+# Use the Elixir base image for building.
+FROM elixir-base
+
+# Build the Dockerfile generation script
+COPY src/ /src/
+RUN cd /src \
+    && mix deps.get \
+    && mix escript.build
+
+
+# Use the Elixir base image again for the generator runtime.
 FROM elixir-base
 
 ARG BASE_IMAGE=elixir-base
@@ -22,12 +32,8 @@ ARG BUILD_TOOLS_IMAGE=elixir-build-tools
 # Install the wrapper script and template.
 COPY app/ /app/
 
-# Build the Dockerfile generation script
-COPY src/ /src/
-RUN cd /src \
-    && mix deps.get \
-    && mix escript.build \
-    && mv generate_dockerfile /app/
+# Copy the built generate_dockerfile script
+COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
 
 ENV ELIXIR_BASE_IMAGE=$BASE_IMAGE \
     ELIXIR_BUILD_TOOLS_IMAGE=$BUILD_TOOLS_IMAGE
