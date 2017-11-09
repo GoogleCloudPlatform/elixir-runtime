@@ -59,9 +59,6 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("minimal", @minimal_config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:workspace_dir, pid) == @tmp_dir
-    assert AppConfig.get!(:project_id, pid) == nil
-    assert AppConfig.get!(:project_id_for_display, pid) == "(unknown)"
-    assert AppConfig.get!(:project_id_for_example, pid) == "my-project-id"
     assert AppConfig.get!(:app_yaml_path, pid) == "app.yaml"
     assert AppConfig.get!(:runtime_config, pid) == %{}
     assert AppConfig.get!(:service_name, pid) == "default"
