@@ -59,6 +59,9 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("minimal", @minimal_config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:workspace_dir, pid) == @tmp_dir
+    assert AppConfig.get!(:project_id, pid) == nil
+    assert AppConfig.get!(:project_id_for_display, pid) == "(unknown)"
+    assert AppConfig.get!(:project_id_for_example, pid) == "my-project-id"
     assert AppConfig.get!(:app_yaml_path, pid) == "app.yaml"
     assert AppConfig.get!(:runtime_config, pid) == %{}
     assert AppConfig.get!(:service_name, pid) == "default"
@@ -67,6 +70,15 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:cloud_sql_instances, pid) == []
     assert AppConfig.get!(:entrypoint, pid) == "exec mix run --no-halt"
     assert AppConfig.get!(:build_scripts, pid) == []
+  end
+
+  test "custom project" do
+    pid = AppConfigTest.setup_test("minimal", @minimal_config,
+      project: "actual-project")
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:project_id, pid) == "actual-project"
+    assert AppConfig.get!(:project_id_for_display, pid) == "actual-project"
+    assert AppConfig.get!(:project_id_for_example, pid) == "actual-project"
   end
 
   test "basic app.yaml" do

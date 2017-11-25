@@ -76,7 +76,12 @@ defmodule GenerateDockerfile.AppConfig do
   end
 
   defp build_data(workspace_dir) do
-    project_id = System.get_env("PROJECT_ID") || MetadataFetcher.get_project_id()
+    project_id = System.get_env("PROJECT_ID") ||
+      if System.get_env("CI") == "true" && System.get_env("TRAVIS") == "true" do
+        MetadataFetcher.get_project_id()
+      else
+        nil
+      end
     project_id_for_display = project_id || "(unknown)"
     project_id_for_example = project_id || "my-project-id"
 
