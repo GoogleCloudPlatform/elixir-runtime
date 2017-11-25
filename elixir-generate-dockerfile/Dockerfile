@@ -32,7 +32,7 @@ ARG BUILD_TOOLS_IMAGE=elixir-build-tools
 # Install the wrapper script and template.
 COPY app/ /app/
 
-# Copy the built generate_dockerfile script
+# Copy the built generate_dockerfile escript
 COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
 
 ENV ELIXIR_BASE_IMAGE=$BASE_IMAGE \

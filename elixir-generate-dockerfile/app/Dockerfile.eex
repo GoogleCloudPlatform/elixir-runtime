@@ -24,13 +24,15 @@ ARG DEBIAN_FRONTEND=noninteractive
 
 ## If your application needs to install additional Debian packages, do so here.
 <%= if @install_packages == "" do %>
-# RUN apt-get update -y
-# RUN apt-get install -y -q package-name another-package-name
-# RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
+# RUN apt-get update -y \
+#     && apt-get install -y -q package-name another-package-name \
+#     && apt-get clean \
+#     && rm -f /var/lib/apt/lists/*_*
 <% else %>
-RUN apt-get update -y
-RUN apt-get install -y -q <%= @install_packages %>
-RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
+RUN apt-get update -y \
+    && apt-get install -y -q <%= @install_packages %> \
+    && apt-get clean \
+    && rm -f /var/lib/apt/lists/*_*
 <% end %>
 
 ## Feel free to install any other software needed by both the build process
@@ -46,6 +48,12 @@ RUN apt-get clean && rm -f /var/lib/apt/lists/*_*
 
 FROM augmented-base AS app-build
 
+## Install python which is necessary for gcloud
+RUN apt-get update -y \
+    && apt-get install -y -q python2.7 \
+    && apt-get clean \
+    && rm -f /var/lib/apt/lists/*_*
+
 ## Obtain common build tools, including nodejs, yarn, gcloud, cloud_sql_proxy,
 ## and the access_cloud_sql script, from this image.
 COPY --from=<%= @build_tools_image %> /build_tools/ /build_tools/
@@ -54,7 +62,7 @@ COPY --from=<%= @build_tools_image %> /build_tools/ /build_tools/
 ENV PATH /build_tools:/build_tools/google-cloud-sdk/bin:/build_tools/nodejs/bin:/build_tools/yarn/bin:${PATH}
 
 ## Set gcloud project here if your build scripts need to use gcloud.
-<% if @project_id %>
+<%= if @project_id do %>
 RUN gcloud config set project <%= @project_id %>
 <% else %>
 # RUN gcloud config set project <%= @project_id_for_example %>
@@ -95,8 +103,8 @@ RUN mix deps.get && mix compile
 
 ## Run application build scripts here.
 ## Scripts that require access to the application CloudSQL instances should
-## run /build_tools/access_cloud_sql first to start the CloudSQL Proxy. e.g.
-##   RUN /build_tools/access_cloud_sql && mix my_task
+## run access_cloud_sql first to start the CloudSQL Proxy. e.g.
+##   RUN access_cloud_sql && mix my_task
 ## Otherwise, simply run each build script in order in a separate RUN command.
 <%= if @build_scripts != "" do %>
 <%= @build_scripts %>

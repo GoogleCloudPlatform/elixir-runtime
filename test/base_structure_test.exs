@@ -14,6 +14,7 @@
 
 defmodule BaseStructureTest do
   use ExUnit.Case
+  import TestHelper
   require Poison.Parser
 
   @config_file "elixir-base/structure-test.json"
@@ -28,8 +29,8 @@ defmodule BaseStructureTest do
     @test_expectations test_definition["expectedOutput"]
     test(@test_name) do
       [binary | args] = @test_command
-      {output, 0} = System.cmd("docker", ["run", "--entrypoint=#{binary}",
-        "elixir-base" | args])
+      output = assert_cmd_succeeds(
+        ["docker", "run", "--entrypoint=#{binary}", "elixir-base" | args])
       Enum.each(@test_expectations, fn expectation ->
         regex = Regex.compile!(expectation)
         assert Regex.match?(regex, output)

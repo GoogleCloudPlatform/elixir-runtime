@@ -87,14 +87,13 @@ defmodule GenerateDockerfile.AppConfig do
     app_config = load_config(workspace_dir, app_yaml_path)
     runtime_config = Map.get(app_config, "runtime_config") |> ensure_map
     beta_settings = Map.get(app_config, "beta_settings") |> ensure_map
-    lifecycle = Map.get(app_config, "lifecycle") |> ensure_map
 
     service_name = Map.get(app_config, "service", @default_service_name)
     env_variables = get_env_variables(app_config)
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
     entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix)
-    build_scripts = get_build_scripts(lifecycle, runtime_config, workspace_dir, phoenix_prefix)
+    build_scripts = get_build_scripts(runtime_config, workspace_dir, phoenix_prefix)
 
     %{
       workspace_dir: workspace_dir,
@@ -128,21 +127,21 @@ defmodule GenerateDockerfile.AppConfig do
     {result, _} = Code.eval_file(mix_lock_path)
 
     [:phoenix]
-      |> Enum.reduce(%{}, fn
-        (pkg, acc) ->
-          pkg_info = result[pkg]
-          if is_tuple(pkg_info) do
-            version = elem(pkg_info, 2) |> to_string
-            if Version.parse(version) == :error do
-              acc
-            else
-              Logger.info("Detected #{pkg} #{version}")
-              Map.put(acc, pkg, version)
-            end
-          else
+    |> Enum.reduce(%{}, fn
+      (pkg, acc) ->
+        pkg_info = result[pkg]
+        if is_tuple(pkg_info) do
+          version = elem(pkg_info, 2) |> to_string
+          if Version.parse(version) == :error do
             acc
+          else
+            Logger.info("Detected #{pkg} #{version}")
+            Map.put(acc, pkg, version)
           end
-      end)
+        else
+          acc
+        end
+    end)
   end
 
   defp get_phoenix_prefix(%{phoenix: version}) do
@@ -151,24 +150,24 @@ defmodule GenerateDockerfile.AppConfig do
   defp get_phoenix_prefix(_), do: nil
 
   defp get_env_variables(app_config) do
-    Map.get(app_config, "env_variables")
-      |> ensure_map
-      |> Enum.reduce(%{},
-        fn ({k, v}, acc) ->
-          k_str = to_string(k)
-          v_str = to_string(v)
-          unless Regex.match?(~r{\A[a-zA-Z]\w*\z}, k_str) do
-            throw {:usage_error, "Illegal environment variable name: `#{k_str}`."}
-          end
-          Map.put(acc, k_str, v_str)
-        end)
+    app_config
+    |> Map.get("env_variables")
+    |> ensure_map
+    |> Enum.reduce(%{},
+      fn ({k, v}, acc) ->
+        k_str = to_string(k)
+        v_str = to_string(v)
+        unless Regex.match?(~r{\A[a-zA-Z]\w*\z}, k_str) do
+          throw {:usage_error, "Illegal environment variable name: `#{k_str}`."}
+        end
+        Map.put(acc, k_str, v_str)
+      end)
   end
 
   defp get_install_packages(runtime_config, app_config) do
     install_packages =
-      Map.get_lazy(runtime_config, "packages", fn ->
-        Map.get(app_config, "packages")
-      end)
+      runtime_config
+      |> Map.get_lazy("packages", fn -> Map.get(app_config, "packages") end)
       |> List.wrap
     Enum.each(install_packages,
       fn pkg ->
@@ -180,7 +179,9 @@ defmodule GenerateDockerfile.AppConfig do
   end
 
   defp get_cloud_sql_instances(beta_settings) do
-    cloud_sql_instances = Map.get(beta_settings, "cloud_sql_instances")
+    cloud_sql_instances =
+      beta_settings
+      |> Map.get("cloud_sql_instances")
       |> List.wrap
       |> Enum.flat_map(fn inst -> String.split(inst, ",") end)
     Enum.each(cloud_sql_instances,
@@ -235,12 +236,9 @@ defmodule GenerateDockerfile.AppConfig do
     end
   end
 
-  defp get_build_scripts(lifecycle, runtime_config, workspace_dir, phoenix_prefix) do
-    Map.get_lazy(lifecycle, "build", fn ->
-      Map.get_lazy(runtime_config, "build", fn ->
-        default_build_scripts(workspace_dir, phoenix_prefix)
-      end)
-    end)
+  defp get_build_scripts(runtime_config, workspace_dir, phoenix_prefix) do
+    runtime_config
+    |> Map.get_lazy("build", fn -> default_build_scripts(workspace_dir, phoenix_prefix) end)
     |> List.wrap
     |> validate_build_scripts
   end

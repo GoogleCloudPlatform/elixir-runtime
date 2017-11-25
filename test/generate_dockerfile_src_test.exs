@@ -14,22 +14,18 @@
 
 defmodule GenerateDockerfileSrcTest do
   use ExUnit.Case
+  import TestHelper
 
   test "Generate dockerfile" do
     File.cd!("elixir-generate-dockerfile/src", fn ->
       IO.puts("**** Preparing generate-dockerfile tests.")
-      assert_command("mix", ["deps.clean", "--all"])
-      assert_command("mix", ["clean"])
+      assert_cmd_succeeds(["mix", "deps.clean", "--all"], show: true)
+      assert_cmd_succeeds(["mix", "clean"], show: true)
       File.rm_rf("mix.lock")
-      assert_command("mix", ["deps.get"])
+      assert_cmd_succeeds(["mix", "deps.get"], show: true)
       IO.puts("**** Running generate-dockerfile tests.")
-      assert_command("mix", ["test"])
+      assert_cmd_succeeds(["mix", "test"], show: true, stream: true)
       IO.puts("**** Completed generate-dockerfile tests.")
     end)
-  end
-
-  defp assert_command(cmd, args) do
-    {_, status} = System.cmd(cmd, args, into: IO.stream(:stdio, :line))
-    assert status == 0
   end
 end

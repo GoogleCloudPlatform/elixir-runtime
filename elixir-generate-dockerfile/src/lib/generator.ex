@@ -36,11 +36,13 @@ defmodule GenerateDockerfile.Generator do
       Keyword.get(opts, :dockerfile_template, @default_dockerfile_template)
       |> Path.expand
 
-    File.cd!(workspace_dir)
-    start_app_config(workspace_dir)
+    File.cd!(workspace_dir, fn ->
+      start_app_config(workspace_dir)
+      write_dockerfile(workspace_dir, dockerfile_template, base_image, build_tools_image)
+      write_dockerignore(workspace_dir)
+    end)
 
-    write_dockerfile(workspace_dir, dockerfile_template, base_image, build_tools_image)
-    write_dockerignore(workspace_dir)
+    :ok
   end
 
   defp start_app_config(workspace_dir) do
@@ -87,10 +89,13 @@ defmodule GenerateDockerfile.Generator do
 
   defp render_env(map) do
     map
-      |> Enum.map(fn {k, v} ->
-        "#{k}=\"#{escape_quoted(v)}\""
-      end)
-      |> Enum.join(" \\\n    ")
+    |> Map.keys()
+    |> Enum.sort()
+    |> Enum.map(fn key ->
+      value = Map.fetch!(map, key)
+      "#{key}=\"#{escape_quoted(value)}\""
+    end)
+    |> Enum.join(" \\\n    ")
   end
 
   defp render_commands(cmds) do

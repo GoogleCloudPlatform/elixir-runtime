@@ -86,7 +86,6 @@ defmodule AppConfigTest do
       runtime_config:
         foo: bar
         packages: libgeos
-      lifecycle:
         build:
           - npm install
           - brunch build
@@ -204,7 +203,7 @@ defmodule AppConfigTest do
     config = """
       env: flex
       runtime: gs://elixir-runtime/elixir.yaml
-      lifecycle:
+      runtime_config:
         build: "multiple\\nlines"
       """
     pid = AppConfigTest.setup_test("minimal", config)
