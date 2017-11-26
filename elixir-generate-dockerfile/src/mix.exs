@@ -31,6 +31,7 @@ defmodule GenerateDockerfile.Mixfile do
       applications: [
         :logger,
         :eex,
+        :inets,
         :yaml_elixir
       ]
     ]

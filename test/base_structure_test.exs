@@ -30,7 +30,7 @@ defmodule BaseStructureTest do
     test(@test_name) do
       [binary | args] = @test_command
       output = assert_cmd_succeeds(
-        ["docker", "run", "--entrypoint=#{binary}", "elixir-base" | args])
+        ["docker", "run", "--rm", "--entrypoint=#{binary}", "elixir-base" | args])
       Enum.each(@test_expectations, fn expectation ->
         regex = Regex.compile!(expectation)
         assert Regex.match?(regex, output)
