@@ -1,0 +1,2 @@
+defmodule MinimalPhoenix do
+end

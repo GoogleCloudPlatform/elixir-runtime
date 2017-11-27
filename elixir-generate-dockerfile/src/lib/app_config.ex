@@ -76,12 +76,7 @@ defmodule GenerateDockerfile.AppConfig do
   end
 
   defp build_data(workspace_dir) do
-    project_id = System.get_env("PROJECT_ID") ||
-      if System.get_env("CI") == "true" && System.get_env("TRAVIS") == "true" do
-        nil
-      else
-        MetadataFetcher.get_project_id()
-      end
+    project_id = get_project()
     project_id_for_display = project_id || "(unknown)"
     project_id_for_example = project_id || "my-project-id"
 
@@ -94,10 +89,11 @@ defmodule GenerateDockerfile.AppConfig do
     beta_settings = Map.get(app_config, "beta_settings") |> ensure_map
 
     service_name = Map.get(app_config, "service", @default_service_name)
+    release_app = Map.get(runtime_config, "release_app")
     env_variables = get_env_variables(app_config)
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
-    entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix)
+    entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app)
     build_scripts = get_build_scripts(runtime_config, workspace_dir, phoenix_prefix)
 
     %{
@@ -108,12 +104,26 @@ defmodule GenerateDockerfile.AppConfig do
       app_yaml_path: app_yaml_path,
       runtime_config: runtime_config,
       service_name: service_name,
+      release_app: release_app,
       env_variables: env_variables,
       install_packages: install_packages,
       cloud_sql_instances: cloud_sql_instances,
       entrypoint: entrypoint,
       build_scripts: build_scripts
     }
+  end
+
+  defp get_project() do
+    project_id = System.get_env("PROJECT_ID")
+    if project_id == nil do
+      if System.get_env("CI") == "true" && System.get_env("TRAVIS") == "true" do
+        nil
+      else
+        MetadataFetcher.get_project_id()
+      end
+    else
+      project_id
+    end
   end
 
   defp load_config(workspace_dir, app_yaml_path) do
@@ -198,21 +208,31 @@ defmodule GenerateDockerfile.AppConfig do
     cloud_sql_instances
   end
 
-  defp get_entrypoint(runtime_config, app_config, phoenix_prefix) do
+  defp get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app) do
     Map.get_lazy(runtime_config, "entrypoint", fn ->
       Map.get_lazy(app_config, "entrypoint", fn ->
-        e = default_entrypoint(phoenix_prefix)
-        Logger.warn("No entrypoint specified. Guessing a default: `#{e}`.")
-        Logger.warn("To use a different entrypoint, add an `entrypoint` field to your config.")
-        e
+        default_entrypoint(phoenix_prefix, release_app)
       end)
     end)
     |> validate_entrypoint
     |> decorate_entrypoint
   end
 
-  defp default_entrypoint(nil), do: "mix run --no-halt"
-  defp default_entrypoint(phoenix_prefix), do: "mix #{phoenix_prefix}.server"
+  defp default_entrypoint(nil, nil) do
+    warn_default_entrypoint("mix run --no-halt")
+  end
+  defp default_entrypoint(phoenix_prefix, nil) do
+    warn_default_entrypoint("mix #{phoenix_prefix}.server")
+  end
+  defp default_entrypoint(_phoenix_prefix, release_app) do
+    ["/app/bin/#{release_app}", "foreground"]
+  end
+
+  defp warn_default_entrypoint(entrypoint) do
+    Logger.warn("No entrypoint specified. Guessing a default: `#{entrypoint}`.")
+    Logger.warn("To use a different entrypoint, add an `entrypoint` field to your config.")
+    entrypoint
+  end
 
   defp validate_entrypoint(entrypoint) when is_list(entrypoint) do
     Enum.map(entrypoint, &validate_entrypoint/1)

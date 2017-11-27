@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -15,14 +13,23 @@
 # limitations under the License.
 
 
-set -e
+# Enhanced Debian for running Elixir.
 
-WORKSPACE_DIR=$(/bin/pwd)
-cd /app
-./generate_dockerfile \
-    --template-dir=/app \
-    --workspace-dir=${WORKSPACE_DIR} \
-    --debian-image=${ELIXIR_DEBIAN_IMAGE} \
-    --base-image=${ELIXIR_BASE_IMAGE} \
-    --builder-image=${ELIXIR_BUILDER_IMAGE} \
-    "$@"
+FROM gcr.io/google-appengine/debian8
+
+# Install key dependencies including locale
+ARG DEBIAN_FRONTEND=noninteractive
+RUN apt-get update -y \
+    && apt-get -y upgrade \
+    && apt-get install -y -q --no-install-recommends \
+        apt-utils \
+        locales \
+        unixodbc \
+    && echo "en_US.UTF-8 UTF-8" > /etc/locale.gen \
+    && locale-gen en_US.UTF-8 \
+    && apt-get clean \
+    && rm -f /var/lib/apt/lists/*_*
+
+# Make sure locale is set to UTF-8
+ENV LANG=en_US.UTF-8 \
+    LANGUAGE=en_US:en

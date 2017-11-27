@@ -19,7 +19,7 @@ defmodule GeneratorTest do
   @test_dir __DIR__
   @cases_dir Path.join(@test_dir, "app_config")
   @tmp_dir Path.join(@test_dir, "tmp")
-  @template_path Path.expand("../../app/Dockerfile.eex", @test_dir)
+  @template_dir Path.expand("../../app", @test_dir)
 
   @minimal_config """
     env: flex
@@ -31,12 +31,12 @@ defmodule GeneratorTest do
     assert_ignore_line("Dockerfile")
     assert_dockerfile_line("## Service: default")
     assert_dockerfile_line("## Project: (unknown)")
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/base AS augmented-base")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
-    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/build-tools")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
-    assert_dockerfile_line("# RUN mkdir /cloudsql")
+    assert_dockerfile_line("# ARG BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/base")
     assert_dockerfile_line("CMD exec mix run --no-halt")
   end
 
@@ -86,7 +86,7 @@ defmodule GeneratorTest do
           - instance3
       """
     run_generator("minimal", config)
-    assert_dockerfile_line("RUN mkdir /cloudsql")
+    assert_dockerfile_line("ARG BUILD_CLOUDSQL_INSTANCES=\"cloud-sql-instance-name,instance2:hi:there,instance3\"")
   end
 
   test "minimal directory with build scripts" do
@@ -108,6 +108,29 @@ defmodule GeneratorTest do
       """
     run_generator("minimal", config)
     assert_dockerfile_line("    && apt-get install -y -q libgeos")
+  end
+
+  test "minimal directory with release app" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: my_app
+      """
+    run_generator("minimal", config)
+    assert_dockerfile_line("RUN mix release --env=prod --verbose")
+    assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/debian")
+    assert_dockerfile_line("CMD [\"/app/bin/my_app\",\"foreground\"]")
+  end
+
+  test "minimal directory with release app and custom entrypoint" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: my_app
+      entrypoint: /app/bin/my_app foreground --blah
+      """
+    run_generator("minimal", config)
+    assert_dockerfile_line("RUN mix release --env=prod --verbose")
+    assert_dockerfile_line("CMD exec /app/bin/my_app foreground --blah")
   end
 
   defp run_generator(dir, config, args \\ []) do
@@ -136,7 +159,7 @@ defmodule GeneratorTest do
       |> Path.join(config_file || "app.yaml")
       |> File.write!(config)
     end
-    Generator.execute(workspace_dir: @tmp_dir, dockerfile_template: @template_path)
+    Generator.execute(workspace_dir: @tmp_dir, template_dir: @template_dir)
   end
 
   defp assert_file_contents(path, expectations) do

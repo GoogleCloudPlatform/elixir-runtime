@@ -18,22 +18,24 @@ set -e
 
 SQL_TIMEOUT=10
 
-if [ -z "${BUILD_CLOUDSQL_INSTANCES}" ]; then
-  >&2 echo "ERROR: Invoked access_cloud_sql with no CloudSQL instances available"
-  if [ "$1" == "--lenient" ]; then
-    exit 0
-  else
-    exit 1
-  fi
+if [ "$1" == "--lenient" ]; then
+  ERROR_RESULT=0
+else
+  ERROR_RESULT=1
 fi
 
-rm -f /build_tools/cloud_sql_proxy.log
-touch /build_tools/cloud_sql_proxy.log
-/build_tools/cloud_sql_proxy -dir=/cloudsql -instances=${BUILD_CLOUDSQL_INSTANCES} > /build_tools/cloud_sql_proxy.log 2>&1 &
-if (timeout ${SQL_TIMEOUT}s tail -f --lines=+1 /build_tools/cloud_sql_proxy.log &) | grep -qe 'Ready for new connections'; then
+if [ -z "${BUILD_CLOUDSQL_INSTANCES}" ]; then
+  >&2 echo "ERROR: Invoked access_cloud_sql with no CloudSQL instances available"
+  exit ${ERROR_RESULT}
+fi
+
+rm -f /tmp/cloud_sql_proxy.log
+touch /tmp/cloud_sql_proxy.log
+cloud_sql_proxy -dir=/cloudsql -instances=${BUILD_CLOUDSQL_INSTANCES} > /tmp/cloud_sql_proxy.log 2>&1 &
+if (timeout ${SQL_TIMEOUT}s tail -f --lines=+1 /tmp/cloud_sql_proxy.log &) | grep -qe 'Ready for new connections'; then
   echo "Started cloud_sql_proxy."
 else
   >&2 echo "ERROR: Failed to start cloud_sql_proxy"
-  >&2 cat /build_tools/cloud_sql_proxy.log
-  exit 1
+  >&2 cat /tmp/cloud_sql_proxy.log
+  exit ${ERROR_RESULT}
 fi

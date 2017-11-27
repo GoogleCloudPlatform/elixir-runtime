@@ -1,5 +1,29 @@
 defmodule TestHelper do
   require ExUnit.Assertions
+  require Poison.Parser
+
+  defmacro structure_tests(file, image) do
+    funcs =
+      file
+      |> File.read!()
+      |> Poison.Parser.parse!()
+      |> Map.fetch!("commandTests")
+      |> Enum.map(fn test_definition ->
+        quote do
+          test(unquote("#{file} : #{test_definition["name"]}")) do
+            [binary | args] = unquote(test_definition["command"])
+            output = TestHelper.assert_cmd_succeeds(
+              ["docker", "run", "--rm", "--entrypoint=#{binary}", unquote(image) | args])
+            unquote(test_definition["expectedOutput"])
+            |> Enum.each(fn expectation ->
+              regex = Regex.compile!(expectation)
+              assert Regex.match?(regex, output)
+            end)
+          end
+        end
+      end)
+    {:__block__, [], funcs}
+  end
 
   def assert_cmd_succeeds(cmd = [binary | args], opts \\ []) do
     cmd_str = Enum.join(cmd, " ")

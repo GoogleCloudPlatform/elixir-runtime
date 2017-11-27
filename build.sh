@@ -19,39 +19,29 @@ set -e
 
 DIRNAME=$(dirname $0)
 
-DEFAULT_ERLANG_PACKAGE="1:20.1-1"
-DEFAULT_ELIXIR_PACKAGE="1.5.2-1"
-
 PROJECT=
 NAMESPACE="elixir"
 IMAGE_TAG=
 STAGING_FLAG=
 UPLOAD_BUCKET=
-ERLANG_PACKAGE=
-ELIXIR_PACKAGE=
 AUTO_YES=
 
 show_usage() {
   echo 'Usage: ./build.sh [flags...]' >&2
   echo 'Flags:' >&2
   echo '  -b <bucket>: upload a new runtime definition to this gcs bucket (defaults to no upload)' >&2
-  echo '  -e <version>: request a specific Erlang package version (defaults to a known recent version)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -s: also tag new images as `staging`' >&2
   echo '  -t <tag>: set the new image tag (creates a new tag if not provided)' >&2
-  echo '  -x <version>: request a specific Elixir package version' >&2
   echo '  -y: automatically confirm' >&2
 }
 
 OPTIND=1
-while getopts ":b:e:n:p:st:x:yh" opt; do
+while getopts ":b:n:p:st:yh" opt; do
   case $opt in
     b)
       UPLOAD_BUCKET=$OPTARG
-      ;;
-    e)
-      ERLANG_PACKAGE=$OPTARG
       ;;
     n)
       NAMESPACE=$OPTARG
@@ -64,9 +54,6 @@ while getopts ":b:e:n:p:st:x:yh" opt; do
       ;;
     t)
       IMAGE_TAG=$OPTARG
-      ;;
-    x)
-      ELIXIR_PACKAGE=$OPTARG
       ;;
     y)
       AUTO_YES="true"
@@ -99,19 +86,12 @@ if [ -z "$IMAGE_TAG" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
   echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
 fi
-if [ -z "$ERLANG_PACKAGE" ]; then
-  ERLANG_PACKAGE=$DEFAULT_ERLANG_PACKAGE
-  echo "Using default Erlang package version: $ERLANG_PACKAGE" >&2
-fi
-if [ -z "$ELIXIR_PACKAGE" ]; then
-  ELIXIR_PACKAGE=$DEFAULT_ELIXIR_PACKAGE
-  echo "Using default Elixir package version: $ELIXIR_PACKAGE" >&2
-fi
 
 echo
-echo "Building base, tools, and dockerfile generator images:"
+echo "Building images:"
+echo "  gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
-echo "  gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG"
+echo "  gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   echo "and tagging them as staging."
@@ -137,9 +117,20 @@ if [ -z "$AUTO_YES" ]; then
 fi
 echo
 
+gcloud container builds submit $DIRNAME/elixir-debian \
+  --config $DIRNAME/elixir-debian/cloudbuild.yaml --project $PROJECT \
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG"
+if [ "$STAGING_FLAG" = "true" ]; then
+  gcloud container images add-tag --project $PROJECT \
+    gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG \
+    gcr.io/$PROJECT/$NAMESPACE/debian:staging -q
+  echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/debian:staging"
+fi
+
 gcloud container builds submit $DIRNAME/elixir-base \
   --config $DIRNAME/elixir-base/cloudbuild.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ERLANG_PACKAGE=$ERLANG_PACKAGE,_ELIXIR_PACKAGE=$ELIXIR_PACKAGE
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
@@ -148,15 +139,15 @@ if [ "$STAGING_FLAG" = "true" ]; then
   echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/base:staging"
 fi
 
-gcloud container builds submit $DIRNAME/elixir-build-tools \
-  --config $DIRNAME/elixir-build-tools/cloudbuild.yaml --project $PROJECT \
+gcloud container builds submit $DIRNAME/elixir-builder \
+  --config $DIRNAME/elixir-builder/cloudbuild.yaml --project $PROJECT \
   --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
-echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG"
+echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
-    gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG \
-    gcr.io/$PROJECT/$NAMESPACE/build-tools:staging -q
-  echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/build-tools:staging"
+    gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG \
+    gcr.io/$PROJECT/$NAMESPACE/builder:staging -q
+  echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/builder:staging"
 fi
 
 gcloud container builds submit $DIRNAME/elixir-generate-dockerfile \

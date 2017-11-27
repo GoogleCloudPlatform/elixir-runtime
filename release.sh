@@ -74,13 +74,17 @@ if [ -z "$PROJECT" ]; then
 fi
 
 gcloud container images add-tag --project $PROJECT \
+  gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/debian:latest -q
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG as latest"
+gcloud container images add-tag --project $PROJECT \
   gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG \
   gcr.io/$PROJECT/$NAMESPACE/base:latest -q
-echo "**** Tagged base image gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG as latest"
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG as latest"
 gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/build-tools:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/build-tools:$IMAGE_TAG as latest"
+  gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/builder:latest -q
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG as latest"
 gcloud container images add-tag --project $PROJECT \
   gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG \
   gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:latest -q

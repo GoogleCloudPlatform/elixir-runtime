@@ -17,9 +17,10 @@ defmodule GenerateDockerfile.Generator do
   require Logger
 
   @default_workspace_dir "/workspace"
+  @default_debian_image "gcr.io/gcp-elixir/runtime/debian"
   @default_base_image "gcr.io/gcp-elixir/runtime/base"
-  @default_build_tools_image "gcr.io/gcp-elixir/runtime/build-tools"
-  @default_dockerfile_template "../app/Dockerfile.eex"
+  @default_builder_image "gcr.io/gcp-elixir/runtime/builder"
+  @default_template_dir "../app"
   @common_dockerignore [
     ".dockerignore",
     "Dockerfile",
@@ -29,20 +30,26 @@ defmodule GenerateDockerfile.Generator do
   ]
 
   def execute(opts) do
-    workspace_dir = Keyword.get(opts, :workspace_dir, @default_workspace_dir)
-    base_image = Keyword.get(opts, :base_image, @default_base_image)
-    build_tools_image = Keyword.get(opts, :build_tools_image, @default_build_tools_image)
-    dockerfile_template =
-      Keyword.get(opts, :dockerfile_template, @default_dockerfile_template)
+    workspace_dir = get_arg(opts, :workspace_dir, @default_workspace_dir)
+    debian_image = get_arg(opts, :debian_image, @default_debian_image)
+    base_image = get_arg(opts, :base_image, @default_base_image)
+    builder_image = get_arg(opts, :builder_image, @default_builder_image)
+    template_dir =
+      Keyword.get(opts, :template_dir, @default_template_dir)
       |> Path.expand
 
     File.cd!(workspace_dir, fn ->
       start_app_config(workspace_dir)
-      write_dockerfile(workspace_dir, dockerfile_template, base_image, build_tools_image)
+      write_dockerfile(workspace_dir, template_dir, debian_image, base_image, builder_image)
       write_dockerignore(workspace_dir)
     end)
 
     :ok
+  end
+
+  defp get_arg(opts, arg, default) do
+    value = Keyword.get(opts, arg, "")
+    if value == "", do: default, else: value
   end
 
   defp start_app_config(workspace_dir) do
@@ -53,25 +60,37 @@ defmodule GenerateDockerfile.Generator do
     end
   end
 
-  defp write_dockerfile(workspace_dir, dockerfile_template, base_image, build_tools_image) do
+  defp write_dockerfile(workspace_dir, template_dir, debian_image, base_image, builder_image) do
     timestamp = DateTime.utc_now |> DateTime.to_iso8601
+    packages = AppConfig.get!(:install_packages) |> Enum.join(" ")
+    release_app = AppConfig.get!(:release_app)
     assigns = [
       workspace_dir: workspace_dir,
+      debian_image: debian_image,
       base_image: base_image,
-      build_tools_image: build_tools_image,
+      builder_image: builder_image,
       timestamp: timestamp,
       app_yaml_path: AppConfig.get!(:app_yaml_path),
       project_id: AppConfig.get!(:project_id),
       project_id_for_display: AppConfig.get!(:project_id_for_display),
       project_id_for_example: AppConfig.get!(:project_id_for_example),
       service_name: AppConfig.get!(:service_name),
-      install_packages: AppConfig.get!(:install_packages) |> Enum.join(" "),
+      release_app: release_app,
+      builder_packages: packages,
+      runtime_packages: packages,
       env_variables: AppConfig.get!(:env_variables) |> render_env,
       cloud_sql_instances: AppConfig.get!(:cloud_sql_instances) |> Enum.join(","),
       build_scripts: AppConfig.get!(:build_scripts) |> render_commands,
       entrypoint: AppConfig.get!(:entrypoint)
     ]
-    dockerfile = EEx.eval_file(dockerfile_template, [assigns: assigns], trim: true)
+    template_name =
+      if release_app == nil do
+        "Dockerfile-simple.eex"
+      else
+        "Dockerfile-release.eex"
+      end
+    template_path = Path.join(template_dir, template_name)
+    dockerfile = EEx.eval_file(template_path, [assigns: assigns], trim: true)
     write_path = Path.join(workspace_dir, "Dockerfile")
     if File.exists?(write_path) do
       GenerateDockerfile.error("Unable to generate Dockerfile because one already exists.")

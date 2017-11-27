@@ -105,6 +105,7 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("minimal", config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:service_name, pid) == "elixir_app"
+    assert AppConfig.get!(:release_app, pid) == nil
     assert AppConfig.get!(:env_variables, pid) ==
       %{"VAR1" => "value1", "VAR2" => "value2", "VAR3" => "123"}
     assert AppConfig.get!(:cloud_sql_instances, pid) ==
@@ -113,6 +114,33 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:entrypoint, pid) == "exec mix app.start"
     assert AppConfig.get!(:install_packages, pid) == ["libgeos"]
     assert AppConfig.get!(:runtime_config, pid)["foo"] == "bar"
+  end
+
+  test "release_app set" do
+    config = """
+      env: flex
+      runtime: gs://elixir-runtime/elixir.yaml
+      runtime_config:
+        release_app: my_app
+      """
+    pid = AppConfigTest.setup_test("minimal", config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:release_app, pid) == "my_app"
+    assert AppConfig.get!(:entrypoint, pid) == "[\"/app/bin/my_app\",\"foreground\"]"
+  end
+
+  test "release_app with custom entrypoint" do
+    config = """
+      env: flex
+      runtime: gs://elixir-runtime/elixir.yaml
+      runtime_config:
+        release_app: my_app
+        entrypoint: mix app.start
+      """
+    pid = AppConfigTest.setup_test("minimal", config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:release_app, pid) == "my_app"
+    assert AppConfig.get!(:entrypoint, pid) == "exec mix app.start"
   end
 
   test "complex entrypoint" do

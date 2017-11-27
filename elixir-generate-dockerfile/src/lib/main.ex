@@ -18,9 +18,10 @@ defmodule GenerateDockerfile do
   def main(args) do
     {opts, leftover, unknown} = OptionParser.parse(args, switches: [
       workspace_dir: :string,
+      debian_image: :string,
       base_image: :string,
-      build_tools_image: :string,
-      dockerfile_template: :string
+      builder_image: :string,
+      template_dir: :string
     ])
     if length(leftover) > 0 do
       error("Unprocessed args: #{inspect(leftover)}")

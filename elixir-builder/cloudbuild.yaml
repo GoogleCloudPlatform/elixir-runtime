@@ -4,7 +4,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['tag', 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG', 'elixir-base']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/build-tools:$_TAG', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/builder:$_TAG', '.']
 
 images:
-  - 'gcr.io/$PROJECT_ID/$_NAMESPACE/build-tools:$_TAG'
+  - 'gcr.io/$PROJECT_ID/$_NAMESPACE/builder:$_TAG'

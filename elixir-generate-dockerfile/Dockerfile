@@ -26,17 +26,19 @@ RUN cd /src \
 # Use the Elixir base image again for the generator runtime.
 FROM elixir-base
 
-ARG BASE_IMAGE=elixir-base
-ARG BUILD_TOOLS_IMAGE=elixir-build-tools
+ARG debian_image=elixir-debian
+ARG base_image=elixir-base
+ARG builder_image=elixir-builder
 
-# Install the wrapper script and template.
+# Install the wrapper script and templates.
 COPY app/ /app/
 
 # Copy the built generate_dockerfile escript
 COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
 
-ENV ELIXIR_BASE_IMAGE=$BASE_IMAGE \
-    ELIXIR_BUILD_TOOLS_IMAGE=$BUILD_TOOLS_IMAGE
+ENV ELIXIR_DEBIAN_IMAGE=${debian_image} \
+    ELIXIR_BASE_IMAGE=${base_image} \
+    ELIXIR_BUILDER_IMAGE=${builder_image}
 
 # The entry point runs the generation script.
 ENTRYPOINT ["/app/generate_dockerfile.sh"]

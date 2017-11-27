@@ -24,6 +24,24 @@ defmodule SampleAppBuildTest do
     run_app_test("minimal_plug", config)
   end
 
+  test "Minimal phoenix app" do
+    config = """
+      env: flex
+      runtime: elixir
+      """
+    run_app_test("minimal_phoenix", config)
+  end
+
+  test "Minimal phoenix app with release" do
+    config = """
+      env: flex
+      runtime: elixir
+      runtime_config:
+        release_app: minimal_phoenix
+      """
+    run_app_test("minimal_phoenix", config)
+  end
+
   @apps_dir Path.join(__DIR__, "sample_apps")
   @tmp_dir Path.join(__DIR__, "tmp")
 
@@ -37,7 +55,7 @@ defmodule SampleAppBuildTest do
     |> File.write!(config)
 
     assert_cmd_succeeds(
-      ["docker", "run", "--rm",
+      ["docker", "run","--rm",
         "-v", "#{@tmp_dir}:/workspace", "-w", "/workspace",
         "elixir-generate-dockerfile"], show: true, verbose: true)
 

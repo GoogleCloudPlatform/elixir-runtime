@@ -1,0 +1,113 @@
+################################################################################
+## This Dockerfile builds an Elixir application for the Google App Engine
+## Flexible Environment. It is meant for an application that uses Distillery
+## releases for deployment.
+## This Dockerfile may be modified and used as an App Engine "custom runtime",
+## or even ported to a different Docker-based hosting environment such as
+## Kubernetes.
+##
+## Generated at: <%= @timestamp %>
+## From configuration: <%= @app_yaml_path %>
+## Project: <%= @project_id_for_display %>
+## Service: <%= @service_name %>
+################################################################################
+
+
+################################################################################
+## 1. Release build
+## From the builder image, installs any dependencies, builds the application
+## release, and runs any additional requested build jobs such as
+## preparation of JavaScript and CSS assets. This stage should prepare a
+## release in the /opt/release directory.
+
+FROM <%= @builder_image %> AS app-build
+
+## If your build requires additional Debian packages, install them here.
+<%= if @builder_packages == "" do %>
+# RUN apt-get update -y \
+#     && apt-get install -y -q package-name another-package-name \
+#     && apt-get clean \
+#     && rm -f /var/lib/apt/lists/*_*
+<% else %>
+RUN apt-get update -y \
+    && apt-get install -y -q <%= @builder_packages %> \
+    && apt-get clean \
+    && rm -f /var/lib/apt/lists/*_*
+<% end %>
+
+## Set gcloud project here if your build scripts need to use gcloud.
+<%= if @project_id do %>
+RUN gcloud config set project <%= @project_id %>
+<% else %>
+# RUN gcloud config set project <%= @project_id_for_example %>
+<% end %>
+
+## If your build scripts need any environment variables, set them here.
+## Generally, these will come from the application's app engine configuration.
+<%= if @env_variables == "" do %>
+# ENV NAME="value"
+<% else %>
+ENV <%= @env_variables %>
+<% end %>
+
+## If your build scripts need access to your application's CloudSQL instances,
+## list them here, comma-delimited. This environment variable tells the
+## "access_cloud_sql" script which databases to connect to.
+<%= if @cloud_sql_instances == "" do %>
+# ENV BUILD_CLOUDSQL_INSTANCES="<%= @project_id_for_example %>:db-region:db-name"
+<% else %>
+ENV BUILD_CLOUDSQL_INSTANCES="<%= @cloud_sql_instances %>"
+<% end %>
+
+## Copy the application files.
+COPY . /app/
+
+## If your build scripts need credentials for access to cloud resources, you
+## may provide an appropriate JSON credentials file and set the
+## GOOGLE_APPLICATION_CREDENTIALS path accordingly. This is not necessary if
+## you provide the cloudbuild service account with the needed privileges.
+# COPY my-build-credentials.json /app/build-credentials.json
+# ENV GOOGLE_APPLICATION_CREDENTIALS=/app/build-credentials.json
+
+## Install dependencies and compile the application.
+RUN mix do deps.get, deps.compile, compile
+
+## Run application build scripts here.
+## Scripts that require access to the application CloudSQL instances should
+## run access_cloud_sql first to start the CloudSQL Proxy. e.g.
+##   RUN access_cloud_sql && mix my_task
+## Otherwise, simply run each build script in order in a separate RUN command.
+<%= if @build_scripts != "" do %>
+<%= @build_scripts %>
+<% end %>
+
+## Create the release.
+RUN mix release --env=prod --verbose
+
+
+################################################################################
+## 2. Application image
+## From the debian image, installs the release built above, and sets the
+## entrypoint. This is the final image executed by Google App Engine.
+
+FROM <%= @debian_image %>
+
+## If your application needs additional Debian packages at runtime, install
+## them here.
+<%= if @runtime_packages == "" do %>
+# RUN apt-get update -y \
+#     && apt-get install -y -q package-name another-package-name \
+#     && apt-get clean \
+#     && rm -f /var/lib/apt/lists/*_*
+<% else %>
+RUN apt-get update -y \
+    && apt-get install -y -q <%= @runtime_packages %> \
+    && apt-get clean \
+    && rm -f /var/lib/apt/lists/*_*
+<% end %>
+
+## Copy built release from build stage into /app
+COPY --from=app-build /app/_build/prod/rel/<%= @release_app %> /app/
+
+## Command to start the release.
+CMD <%= @entrypoint %>

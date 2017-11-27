@@ -1,5 +1,3 @@
-#!/bin/bash
-
 # Copyright 2017 Google Inc.
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
@@ -14,15 +12,11 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
+defmodule ImageStructureTest do
+  use ExUnit.Case
+  import TestHelper
 
-set -e
-
-WORKSPACE_DIR=$(/bin/pwd)
-cd /app
-./generate_dockerfile \
-    --template-dir=/app \
-    --workspace-dir=${WORKSPACE_DIR} \
-    --debian-image=${ELIXIR_DEBIAN_IMAGE} \
-    --base-image=${ELIXIR_BASE_IMAGE} \
-    --builder-image=${ELIXIR_BUILDER_IMAGE} \
-    "$@"
+  structure_tests "elixir-debian/structure-test.json", "elixir-debian"
+  structure_tests "elixir-base/structure-test.json", "elixir-base"
+  structure_tests "elixir-builder/structure-test.json", "elixir-builder"
+end

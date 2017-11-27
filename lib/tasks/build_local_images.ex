@@ -19,25 +19,28 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   @shortdoc "Build images locally."
 
-  @erlang_package_version "1:20.1-1"
-  @elixir_package_version "1.5.2-1"
-
   use Mix.Task
 
   def run(_args) do
-    File.cd!("elixir-base", fn ->
-      {_, 0} = System.cmd("docker", ["build", "--no-cache", "--pull", "-t", "elixir-base",
-          "--build-arg", "ERLANG_PACKAGE_VERSION=#{@erlang_package_version}",
-          "--build-arg", "ELIXIR_PACKAGE_VERSION=#{@elixir_package_version}",
-          "."], into: IO.stream(:stdio, :line))
+    File.cd!("elixir-debian", fn ->
+      {_, 0} = System.cmd("docker",
+        ["build", "--no-cache", "--pull", "-t", "elixir-debian", "."],
+        into: IO.stream(:stdio, :line))
     end)
-    File.cd!("elixir-build-tools", fn ->
-      {_, 0} = System.cmd("docker", ["build", "--no-cache", "-t", "elixir-build-tools",
-          "."], into: IO.stream(:stdio, :line))
+    File.cd!("elixir-base", fn ->
+      {_, 0} = System.cmd("docker",
+        ["build", "--no-cache", "-t", "elixir-base", "."],
+        into: IO.stream(:stdio, :line))
+    end)
+    File.cd!("elixir-builder", fn ->
+      {_, 0} = System.cmd("docker",
+        ["build", "--no-cache", "-t", "elixir-builder", "."],
+        into: IO.stream(:stdio, :line))
     end)
     File.cd!("elixir-generate-dockerfile", fn ->
-      {_, 0} = System.cmd("docker", ["build", "--no-cache", "-t", "elixir-generate-dockerfile",
-          "."], into: IO.stream(:stdio, :line))
+      {_, 0} = System.cmd("docker",
+        ["build", "--no-cache", "-t", "elixir-generate-dockerfile", "."],
+        into: IO.stream(:stdio, :line))
     end)
   end
 end
