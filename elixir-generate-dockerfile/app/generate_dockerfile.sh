@@ -17,6 +17,10 @@
 
 set -e
 
+# Container Builder changes the home directory, so make sure the global
+# .tool-versions file is replicated there.
+test "${HOME}" = "/root" || cp /root/.tool-versions ${HOME}/
+
 WORKSPACE_DIR=$(/bin/pwd)
 cd /app
 ./generate_dockerfile \
