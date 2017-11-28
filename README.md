@@ -4,8 +4,8 @@
 
 This repository contains the source for the Elixir Runtime for the
 [Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/),
-[Google Container Engine](https://cloud.google.com/container-engine),
-[Kubernetes](https://kubernetes.io), and other Docker-based hosting environments.
+[Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine),
+and other Docker-based hosting environments.
 It is not covered by any SLA or deprecation policy. It may change at any time.
 
 ## Using the Elixir Runtime
@@ -14,7 +14,7 @@ The Elixir Runtime for Google Cloud Platform is an experimental runtime making
 it easy to run a Elixir web application in the Flexible Environment of
 [Google App Engine](https://cloud.google.com/appengine/). It is not a
 "custom runtime"; you do not need to provide your own Dockerfile. Instead, it
-is a full-featured runtime using the same technology used by the official
+is a full-featured runtime built on the same technology used by the official
 language runtimes provided by Google.
 
 To use the Elixir Runtime, you should have an Elixir project that, when run,
@@ -23,15 +23,10 @@ that uses [Phoenix](http://phoenixframework.org/) will work. You will also
 need a Google Cloud project with billing enabled, and you must have the
 [Google Cloud SDK](https://cloud.google.com/sdk/) installed.
 
-As of early Sept 2017, you will also need to configure the Google Cloud SDK
-to enable "runtime builders". Execute this in your shell:
-
-    gcloud config set app/use_runtime_builders true
-
-However, note that some of the official languages may still be in beta with
-the "runtime builders" setting activated, so you might want to set it only
-when you are working with Elixir. We expect this setting to be the default
-within a few months, once all the official languages have been validated.
+(Note: some earlier versions of this README directed you to set the
+`app/use_runtime_builders` configuration in gcloud. This step is no longer
+necessary with gcloud 175.0.0 and later, and you should now remove this config
+if you currently have it.)
 
 At the root of your project, create a file called `app.yaml` with the following
 contents:
@@ -39,20 +34,40 @@ contents:
     env: flex
     runtime: gs://elixir-runtime/elixir.yaml
 
-You can then deploy to App Engine with
+If you have Distillery set up to build releases for your application (which is
+recommended), you should add the name of the released application to the
+`app.yaml` file. The contents would look like:
 
-    gcloud app deploy
+    env: flex
+    runtime: gs://elixir-runtime/elixir.yaml
+    runtime_config:
+      release_app: my_app
 
-By default, the runtime will build your project by downloading its deps, and
-compiling with `MIX_ENV=prod`. For phoenix apps that use brunch, it will also
-perform a brunch build. It will start your application using the command
-`mix phx.server` for Phoenix apps (or `mix run --no-halt` for non-Phoenix).
-You may provide a different entrypoint by adding an `entrypoint` field to your
-`app.yaml`; for example:
+This will cause the Elixir runtime to build a release for your app, and to
+launch your app by running the release in the foreground.
+
+If you are _not_ using releases, the Elixir runtime will just compile your app
+and launch it by running a command line. In this case, you should specify the
+command to use by adding an `entrypoint` field to your `app.yaml`. For example:
 
     env: flex
     runtime: gs://elixir-runtime/elixir.yaml
     entrypoint: mix app.start
+
+(If you are not using releases and do not specify an entrypoint, the Elixir
+runtime will attempt to guess an appropriate command to use. Generally, this
+will be `mix phx.server` for Phoenix apps, or `mix run --no-halt` for
+non-Phoenix apps. However, it is recommended that you provide an explicit
+entrypoint for non-release apps.)
+
+Once the `app.yaml` config file is set up, you can deploy to App Engine with
+
+    gcloud app deploy
+
+By default, the runtime will build your project by downloading its deps, and
+compile with `MIX_ENV=prod`. For Phoenix apps that use Brunch, it will also
+perform a brunch build. Finally, if you are using releases, a release will be
+built for your application automatically.
 
 More information, including other configuration fields that can be added to
 `app.yaml`, is available in the
