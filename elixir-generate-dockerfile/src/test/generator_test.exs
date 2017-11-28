@@ -33,6 +33,8 @@ defmodule GeneratorTest do
     assert_dockerfile_line("## Project: (unknown)")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
+    assert_dockerfile_line("# ARG requested_erlang_version=")
+    assert_dockerfile_line("# ARG requested_elixir_version=")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
     assert_dockerfile_line("# ARG BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
@@ -116,6 +118,8 @@ defmodule GeneratorTest do
         release_app: my_app
       """
     run_generator("minimal", config)
+    assert_dockerfile_line("# ARG requested_erlang_version=")
+    assert_dockerfile_line("# ARG requested_elixir_version=")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/debian")
@@ -131,6 +135,40 @@ defmodule GeneratorTest do
     run_generator("minimal", config)
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("CMD exec /app/bin/my_app foreground --blah")
+  end
+
+  test "phoenix 1.3 directory with custom erlang and elixir" do
+    run_generator("phoenix_1_3", @minimal_config)
+    assert_dockerfile_line("# ARG requested_erlang_version=")
+    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1\"")
+  end
+
+  test "phoenix umbrella 1.3 directory with custom erlang and elixir" do
+    run_generator("phoenix_umbrella_1_3", @minimal_config)
+    assert_dockerfile_line("ARG requested_erlang_version=\"20.0\"")
+    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1-otp-20\"")
+  end
+
+  test "phoenix 1.3 directory with release app and custom elixir" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: blog
+      """
+    run_generator("phoenix_1_3", config)
+    assert_dockerfile_line("# ARG requested_erlang_version=")
+    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1\"")
+    assert_dockerfile_line("RUN mix release --env=prod --verbose")
+  end
+
+  test "phoenix umbrella 1.3 directory with release app and custom erlang and elixir" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: blog
+      """
+    run_generator("phoenix_umbrella_1_3", config)
+    assert_dockerfile_line("ARG requested_erlang_version=\"20.0\"")
+    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1-otp-20\"")
+    assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
   defp run_generator(dir, config, args \\ []) do

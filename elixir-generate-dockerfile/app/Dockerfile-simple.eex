@@ -35,6 +35,48 @@ RUN apt-get update -y \
     && rm -f /var/lib/apt/lists/*_*
 <% end %>
 
+## If your application requires a specific version of Erlang and/or Elixir,
+## provide a `.tool-versions` file in your application directory, and also set
+## the versions here. Finally, make sure the corresponding versions are also
+## set in the runtime image at the bottom. If you change the versions in the
+## future, make sure all three of these versions match.
+## For more information on the asdf tool that is used to manage Erlang and
+## Elixir installation, see https://github.com/asdf-vm/asdf
+<%= if @erlang_version do %>
+ARG requested_erlang_version="<%= @erlang_version %>"
+RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
+      asdf plugin-update erlang \
+      && asdf install erlang ${requested_erlang_version} \
+      && asdf global erlang ${requested_erlang_version}; \
+    fi
+<% else %>
+# ARG requested_erlang_version="20.1"
+# RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
+#       asdf plugin-update erlang \
+#       && asdf install erlang ${requested_erlang_version} \
+#       && asdf global erlang ${requested_erlang_version}; \
+#     fi
+<% end %>
+<%= if @elixir_version do %>
+ARG requested_elixir_version="<%= @elixir_version %>"
+RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
+      asdf plugin-update elixir \
+      && asdf install elixir ${requested_elixir_version} \
+      && asdf global elixir ${requested_elixir_version} \
+      && mix local.hex --force \
+      && mix local.rebar --force; \
+    fi
+<% else %>
+# ARG requested_elixir_version="1.5.2-otp-20"
+# RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
+#       asdf plugin-update elixir \
+#       && asdf install elixir ${requested_elixir_version} \
+#       && asdf global elixir ${requested_elixir_version} \
+#       && mix local.hex --force \
+#       && mix local.rebar --force; \
+#     fi
+<% end %>
+
 ## Set gcloud project here if your build scripts need to use gcloud.
 <%= if @project_id do %>
 RUN gcloud config set project <%= @project_id %>
@@ -83,7 +125,7 @@ RUN mix deps.get && mix compile
 
 
 ################################################################################
-## 2. Application image
+## 2. Runtime image
 ## From the base image, installs the application directory built above, and
 ## sets the entrypoint. This is the final image executed by Google App Engine.
 
@@ -101,6 +143,40 @@ RUN apt-get update -y \
     && apt-get install -y -q <%= @runtime_packages %> \
     && apt-get clean \
     && rm -f /var/lib/apt/lists/*_*
+<% end %>
+
+## If a specific version of Erlang and/or Elixir was installed into the build
+## image above, also copy it into the runtime image.
+## Note these versions must match the versions specified in the build image.
+<%= if @erlang_version do %>
+ARG requested_erlang_version="<%= @erlang_version %>"
+RUN rm -rf /opt/asdf/installs/erlang/${requested_erlang_version}
+COPY --from=app-build /opt/asdf/installs/erlang/${requested_erlang_version} \
+     /opt/asdf/installs/erlang/${requested_erlang_version}
+RUN asdf global erlang ${requested_erlang_version}
+<% else %>
+# ARG requested_erlang_version="20.1"
+# RUN rm -rf /opt/asdf/installs/erlang/${requested_erlang_version}
+# COPY --from=app-build /opt/asdf/installs/erlang/${requested_erlang_version} \
+#      /opt/asdf/installs/erlang/${requested_erlang_version}
+# RUN asdf global erlang ${requested_erlang_version}
+<% end %>
+<%= if @elixir_version do %>
+ARG requested_elixir_version="<%= @elixir_version %>"
+RUN rm -rf /opt/asdf/installs/elixir/${requested_elixir_version}
+COPY --from=app-build /opt/asdf/installs/elixir/${requested_elixir_version} \
+     /opt/asdf/installs/elixir/${requested_elixir_version}
+RUN asdf global elixir ${requested_elixir_version} \
+    && mix local.hex --force \
+    && mix local.rebar --force
+<% else %>
+# ARG requested_elixir_version="1.5.2-otp-20"
+# RUN rm -rf /opt/asdf/installs/elixir/${requested_elixir_version}
+# COPY --from=app-build /opt/asdf/installs/elixir/${requested_elixir_version} \
+#      /opt/asdf/installs/elixir/${requested_elixir_version}
+# RUN asdf global elixir ${requested_elixir_version} \
+#     && mix local.hex --force \
+#     && mix local.rebar --force
 <% end %>
 
 ## Copy built application from build stage

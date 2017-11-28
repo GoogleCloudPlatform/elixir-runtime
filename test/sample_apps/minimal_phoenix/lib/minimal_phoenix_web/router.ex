@@ -8,5 +8,6 @@ defmodule MinimalPhoenixWeb.Router do
   scope "/", MinimalPhoenixWeb do
     pipe_through :browser
     get "/", PageController, :index
+    get "/elixir-version", PageController, :elixir_version
   end
 end

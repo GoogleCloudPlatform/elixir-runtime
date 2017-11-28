@@ -83,6 +83,8 @@ defmodule GenerateDockerfile.AppConfig do
     deps_info = analyze_deps(workspace_dir)
     phoenix_prefix = get_phoenix_prefix(deps_info)
 
+    {erlang_version, elixir_version} = get_tool_versions(workspace_dir)
+
     app_yaml_path = System.get_env("GAE_APPLICATION_YAML_PATH") || @default_app_yaml_path
     app_config = load_config(workspace_dir, app_yaml_path)
     runtime_config = Map.get(app_config, "runtime_config") |> ensure_map
@@ -101,6 +103,8 @@ defmodule GenerateDockerfile.AppConfig do
       project_id: project_id,
       project_id_for_display: project_id_for_display,
       project_id_for_example: project_id_for_example,
+      erlang_version: erlang_version,
+      elixir_version: elixir_version,
       app_yaml_path: app_yaml_path,
       runtime_config: runtime_config,
       service_name: service_name,
@@ -163,6 +167,28 @@ defmodule GenerateDockerfile.AppConfig do
     if Version.compare(version, "1.3.0") == :lt, do: "phoenix", else: "phx"
   end
   defp get_phoenix_prefix(_), do: nil
+
+  defp get_tool_versions(workspace_dir) do
+    tool_versions_path = Path.join(workspace_dir, ".tool-versions")
+    if File.regular?(tool_versions_path) do
+      tool_versions_content = File.read!(tool_versions_path)
+      erlang_version =
+        Regex.run(~r{^erlang\s+(.+)$}m, tool_versions_content)
+        |> case do
+          nil -> nil
+          [_, version] -> version
+        end
+      elixir_version =
+        Regex.run(~r{^elixir\s+(.+)$}m, tool_versions_content)
+        |> case do
+          nil -> nil
+          [_, version] -> version
+        end
+      {erlang_version, elixir_version}
+    else
+      {nil, nil}
+    end
+  end
 
   defp get_env_variables(app_config) do
     app_config

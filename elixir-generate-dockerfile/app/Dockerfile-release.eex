@@ -35,6 +35,47 @@ RUN apt-get update -y \
     && rm -f /var/lib/apt/lists/*_*
 <% end %>
 
+## If your application requires a specific version of Erlang and/or Elixir,
+## provide a `.tool-versions` file in your application directory, and also set
+## the versions here. If you change the versions in the future, make sure the
+## `.tool-versions` file matches the setting below. For more information on
+## the asdf tool that is used to manage Erlang and Elixir installation, see
+## https://github.com/asdf-vm/asdf
+<%= if @erlang_version do %>
+ARG requested_erlang_version="<%= @erlang_version %>"
+RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
+      asdf plugin-update erlang \
+      && asdf install erlang ${requested_erlang_version} \
+      && asdf global erlang ${requested_erlang_version}; \
+    fi
+<% else %>
+# ARG requested_erlang_version="20.1"
+# RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
+#       asdf plugin-update erlang \
+#       && asdf install erlang ${requested_erlang_version} \
+#       && asdf global erlang ${requested_erlang_version}; \
+#     fi
+<% end %>
+<%= if @elixir_version do %>
+ARG requested_elixir_version="<%= @elixir_version %>"
+RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
+      asdf plugin-update elixir \
+      && asdf install elixir ${requested_elixir_version} \
+      && asdf global elixir ${requested_elixir_version} \
+      && mix local.hex --force \
+      && mix local.rebar --force; \
+    fi
+<% else %>
+# ARG requested_elixir_version="1.5.2-otp-20"
+# RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
+#       asdf plugin-update elixir \
+#       && asdf install elixir ${requested_elixir_version} \
+#       && asdf global elixir ${requested_elixir_version} \
+#       && mix local.hex --force \
+#       && mix local.rebar --force; \
+#     fi
+<% end %>
+
 ## Set gcloud project here if your build scripts need to use gcloud.
 <%= if @project_id do %>
 RUN gcloud config set project <%= @project_id %>
@@ -86,7 +127,7 @@ RUN mix release --env=prod --verbose
 
 
 ################################################################################
-## 2. Application image
+## 2. Application runtime image
 ## From the debian image, installs the release built above, and sets the
 ## entrypoint. This is the final image executed by Google App Engine.
 

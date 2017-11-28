@@ -70,6 +70,8 @@ defmodule GenerateDockerfile.Generator do
       base_image: base_image,
       builder_image: builder_image,
       timestamp: timestamp,
+      erlang_version: AppConfig.get!(:erlang_version),
+      elixir_version: AppConfig.get!(:elixir_version),
       app_yaml_path: AppConfig.get!(:app_yaml_path),
       project_id: AppConfig.get!(:project_id),
       project_id_for_display: AppConfig.get!(:project_id_for_display),

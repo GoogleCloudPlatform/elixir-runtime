@@ -29,7 +29,14 @@ defmodule SampleAppBuildTest do
       env: flex
       runtime: elixir
       """
-    run_app_test("minimal_phoenix", config)
+    run_app_test("minimal_phoenix", config,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
+          show: true)
+        assert_cmd_output(
+          ["docker", "run", "--rm", image, "elixir", "--version"], ~r{1\.5\.1}, show: true)
+      end)
   end
 
   test "Minimal phoenix app with release" do
@@ -39,13 +46,25 @@ defmodule SampleAppBuildTest do
       runtime_config:
         release_app: minimal_phoenix
       """
-    run_app_test("minimal_phoenix", config)
+    run_app_test("minimal_phoenix", config,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix"],
+          show: true)
+      end,
+      check_container: fn _container ->
+        assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
+          "1.5.1", timeout: 10, show: true, verbose: true)
+      end)
   end
 
   @apps_dir Path.join(__DIR__, "sample_apps")
   @tmp_dir Path.join(__DIR__, "tmp")
 
-  def run_app_test(app_name, config, _opts \\ []) do
+  def run_app_test(app_name, config, opts \\ []) do
+    check_container = Keyword.get(opts, :check_container, nil)
+    check_image = Keyword.get(opts, :check_image, nil)
+
     File.rm_rf!(@tmp_dir)
     @apps_dir
     |> Path.join(app_name)
@@ -61,7 +80,13 @@ defmodule SampleAppBuildTest do
 
     File.cd!(@tmp_dir, fn ->
       build_docker_image(fn image ->
-        run_docker_daemon(["-p", "8080:8080", image], fn _container ->
+        if check_image != nil do
+          check_image.(image)
+        end
+        run_docker_daemon(["-p", "8080:8080", image], fn container ->
+          if check_container != nil do
+            check_container.(container)
+          end
           assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080"],
             ~r{Hello, world!}, timeout: 10, show: true, verbose: true)
         end)

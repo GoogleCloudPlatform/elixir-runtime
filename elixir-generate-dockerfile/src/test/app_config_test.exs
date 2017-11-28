@@ -70,6 +70,8 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:cloud_sql_instances, pid) == []
     assert AppConfig.get!(:entrypoint, pid) == "exec mix run --no-halt"
     assert AppConfig.get!(:build_scripts, pid) == []
+    assert AppConfig.get!(:erlang_version, pid) == nil
+    assert AppConfig.get!(:elixir_version, pid) == nil
   end
 
   test "custom project" do
@@ -170,6 +172,7 @@ defmodule AppConfigTest do
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
     assert AppConfig.get!(:build_scripts, pid) == ["cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"]
+    assert AppConfig.get!(:elixir_version, pid) == "1.5.1"
   end
 
   test "phoenix umbrella 1.3 defaults" do
@@ -177,6 +180,8 @@ defmodule AppConfigTest do
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
     assert AppConfig.get!(:build_scripts, pid) == ["cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"]
+    assert AppConfig.get!(:erlang_version, pid) == "20.0"
+    assert AppConfig.get!(:elixir_version, pid) == "1.5.1-otp-20"
   end
 
   test "phoenix 1.2 defaults" do
