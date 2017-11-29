@@ -19,8 +19,13 @@ defmodule GenerateDockerfile do
     {opts, leftover, unknown} = OptionParser.parse(args, switches: [
       workspace_dir: :string,
       debian_image: :string,
-      base_image: :string,
+      asdf_image: :string,
       builder_image: :string,
+      prebuilt_erlang_image_base: :string,
+      prebuilt_erlang_image_tag: :string,
+      prebuilt_erlang_versions: :string,
+      default_erlang_version: :string,
+      default_elixir_version: :string,
       template_dir: :string
     ])
     if length(leftover) > 0 do
@@ -30,6 +35,7 @@ defmodule GenerateDockerfile do
       error("Unrecognized switches: #{inspect(unknown)}")
     end
     GenerateDockerfile.Generator.execute(opts)
+    Logger.flush()
   end
 
   def error(msg) do

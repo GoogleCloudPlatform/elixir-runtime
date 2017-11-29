@@ -16,10 +16,14 @@ defmodule GenerateDockerfile.Generator do
   alias GenerateDockerfile.AppConfig
   require Logger
 
+  @default_erlang_version "20.1"
+  @default_elixir_version "1.5.2-otp-20"
   @default_workspace_dir "/workspace"
   @default_debian_image "gcr.io/gcp-elixir/runtime/debian"
-  @default_base_image "gcr.io/gcp-elixir/runtime/base"
+  @default_asdf_image "gcr.io/gcp-elixir/runtime/asdf"
   @default_builder_image "gcr.io/gcp-elixir/runtime/builder"
+  @default_prebuilt_erlang_image_base "gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-"
+  @default_prebuilt_erlang_image_tag "latest"
   @default_template_dir "../app"
   @common_dockerignore [
     ".dockerignore",
@@ -32,15 +36,27 @@ defmodule GenerateDockerfile.Generator do
   def execute(opts) do
     workspace_dir = get_arg(opts, :workspace_dir, @default_workspace_dir)
     debian_image = get_arg(opts, :debian_image, @default_debian_image)
-    base_image = get_arg(opts, :base_image, @default_base_image)
+    asdf_image = get_arg(opts, :asdf_image, @default_asdf_image)
     builder_image = get_arg(opts, :builder_image, @default_builder_image)
+    prebuilt_erlang_image_base = get_arg(opts, :prebuilt_erlang_image_base, @default_prebuilt_erlang_image_base)
+    prebuilt_erlang_image_tag = get_arg(opts, :prebuilt_erlang_image_tag, @default_prebuilt_erlang_image_tag)
+    prebuilt_erlang_versions = get_arg(opts, :prebuilt_erlang_versions, "") |> String.split(",")
+    default_erlang_version = get_arg(opts, :default_erlang_version, @default_erlang_version)
+    default_elixir_version = get_arg(opts, :default_elixir_version, @default_elixir_version)
     template_dir =
       Keyword.get(opts, :template_dir, @default_template_dir)
       |> Path.expand
 
     File.cd!(workspace_dir, fn ->
-      start_app_config(workspace_dir)
-      write_dockerfile(workspace_dir, template_dir, debian_image, base_image, builder_image)
+      start_app_config(workspace_dir, default_erlang_version, default_elixir_version)
+      assigns = build_assigns(
+        prebuilt_erlang_versions,
+        prebuilt_erlang_image_base,
+        prebuilt_erlang_image_tag,
+        debian_image,
+        asdf_image,
+        builder_image)
+      write_dockerfile(workspace_dir, template_dir, assigns)
       write_dockerignore(workspace_dir)
     end)
 
@@ -52,32 +68,48 @@ defmodule GenerateDockerfile.Generator do
     if value == "", do: default, else: value
   end
 
-  defp start_app_config(workspace_dir) do
-    {:ok, _} = AppConfig.start_link(workspace_dir: workspace_dir)
+  defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version) do
+    {:ok, _} = AppConfig.start_link(
+      workspace_dir: workspace_dir,
+      default_erlang_version: default_erlang_version,
+      default_elixir_version: default_elixir_version)
     case AppConfig.status() do
       {:error, msg} -> GenerateDockerfile.error(msg)
       :ok -> nil
     end
   end
 
-  defp write_dockerfile(workspace_dir, template_dir, debian_image, base_image, builder_image) do
+  defp build_assigns(
+      prebuilt_erlang_versions,
+      prebuilt_erlang_image_base,
+      prebuilt_erlang_image_tag,
+      debian_image,
+      asdf_image,
+      builder_image) do
     timestamp = DateTime.utc_now |> DateTime.to_iso8601
     packages = AppConfig.get!(:install_packages) |> Enum.join(" ")
-    release_app = AppConfig.get!(:release_app)
-    assigns = [
-      workspace_dir: workspace_dir,
+    erlang_version = AppConfig.get!(:erlang_version)
+    elixir_version = AppConfig.get!(:elixir_version)
+    prebuilt_erlang_image =
+      if Enum.member?(prebuilt_erlang_versions, erlang_version) do
+        "#{prebuilt_erlang_image_base}#{erlang_version}:#{prebuilt_erlang_image_tag}"
+      else
+        nil
+      end
+    [
       debian_image: debian_image,
-      base_image: base_image,
+      asdf_image: asdf_image,
       builder_image: builder_image,
       timestamp: timestamp,
-      erlang_version: AppConfig.get!(:erlang_version),
-      elixir_version: AppConfig.get!(:elixir_version),
+      erlang_version: erlang_version,
+      elixir_version: elixir_version,
+      prebuilt_erlang_image: prebuilt_erlang_image,
       app_yaml_path: AppConfig.get!(:app_yaml_path),
       project_id: AppConfig.get!(:project_id),
       project_id_for_display: AppConfig.get!(:project_id_for_display),
       project_id_for_example: AppConfig.get!(:project_id_for_example),
       service_name: AppConfig.get!(:service_name),
-      release_app: release_app,
+      release_app: AppConfig.get!(:release_app),
       builder_packages: packages,
       runtime_packages: packages,
       env_variables: AppConfig.get!(:env_variables) |> render_env,
@@ -85,8 +117,11 @@ defmodule GenerateDockerfile.Generator do
       build_scripts: AppConfig.get!(:build_scripts) |> render_commands,
       entrypoint: AppConfig.get!(:entrypoint)
     ]
+  end
+
+  defp write_dockerfile(workspace_dir, template_dir, assigns) do
     template_name =
-      if release_app == nil do
+      if AppConfig.get!(:release_app) == nil do
         "Dockerfile-simple.eex"
       else
         "Dockerfile-release.eex"
@@ -134,16 +169,16 @@ defmodule GenerateDockerfile.Generator do
     else
       []
     end
-    desired_entries = [ AppConfig.get!(:app_yaml_path) | @common_dockerignore]
+    desired_entries = [AppConfig.get!(:app_yaml_path) | @common_dockerignore]
     File.open!(write_path, [:append], fn (io) ->
       Enum.each(desired_entries -- existing_entries, fn (entry) ->
         IO.puts(io, entry)
       end)
     end)
     if length(existing_entries) == 0 do
-      Logger.info("Generated .dockerignore")
+      Logger.info("Generated .dockerignore file.")
     else
-      Logger.info("Updated .dockerignore")
+      Logger.info("Updated .dockerignore file.")
     end
   end
 end

@@ -26,9 +26,14 @@ RUN cd /src \
 # Use the Elixir base image again for the generator runtime.
 FROM elixir-base
 
-ARG debian_image=elixir-debian
-ARG base_image=elixir-base
-ARG builder_image=elixir-builder
+ARG debian_image
+ARG asdf_image
+ARG builder_image
+ARG prebuilt_erlang_image_base
+ARG prebuilt_erlang_image_tag
+ARG prebuilt_erlang_versions
+ARG default_erlang_version
+ARG default_elixir_version
 
 # Install the wrapper script and templates.
 COPY app/ /app/
@@ -37,8 +42,13 @@ COPY app/ /app/
 COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
 
 ENV ELIXIR_DEBIAN_IMAGE=${debian_image} \
-    ELIXIR_BASE_IMAGE=${base_image} \
-    ELIXIR_BUILDER_IMAGE=${builder_image}
+    ELIXIR_ASDF_IMAGE=${asdf_image} \
+    ELIXIR_BUILDER_IMAGE=${builder_image} \
+    PREBUILT_ERLANG_IMAGE_BASE=${prebuilt_erlang_image_base} \
+    PREBUILT_ERLANG_IMAGE_TAG=${prebuilt_erlang_image_tag} \
+    PREBUILT_ERLANG_VERSIONS=${prebuilt_erlang_versions} \
+    DEFAULT_ERLANG_VERSION=${default_erlang_version} \
+    DEFAULT_ELIXIR_VERSION=${default_elixir_version}
 
 # The entry point runs the generation script.
 ENTRYPOINT ["/app/generate_dockerfile.sh"]

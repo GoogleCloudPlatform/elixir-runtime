@@ -19,6 +19,11 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   @shortdoc "Build images locally."
 
+  @prebuilt_erlang_image_base "elixir-prebuilt-erlang-"
+  @prebuilt_erlang_versions ["20.1"]
+  @base_erlang_version "20.1"
+  @base_elixir_version "1.5.2-otp-20"
+
   use Mix.Task
 
   def run(_args) do
@@ -27,9 +32,29 @@ defmodule Mix.Tasks.BuildLocalImages do
         ["build", "--no-cache", "--pull", "-t", "elixir-debian", "."],
         into: IO.stream(:stdio, :line))
     end)
-    File.cd!("elixir-base", fn ->
+    File.cd!("elixir-asdf", fn ->
       {_, 0} = System.cmd("docker",
-        ["build", "--no-cache", "-t", "elixir-base", "."],
+        ["build", "--no-cache", "-t", "elixir-asdf", "."],
+        into: IO.stream(:stdio, :line))
+    end)
+    File.cd!("elixir-prebuilt-erlang", fn ->
+      Enum.each(@prebuilt_erlang_versions, fn version ->
+        {_, 0} = System.cmd("docker",
+          ["build", "--no-cache", "-t", "#{@prebuilt_erlang_image_base}#{version}",
+            "--build-arg", "erlang_version=#{version}", "."],
+          into: IO.stream(:stdio, :line))
+      end)
+    end)
+    File.cd!("elixir-base", fn ->
+      {dockerfile, 0} = System.cmd("sed",
+        ["-e", "s|$PREBUILT_ERLANG_IMAGE|#{@prebuilt_erlang_image_base}#{@base_erlang_version}|g",
+         "Dockerfile-prebuilt.in"])
+      :ok = File.write!("Dockerfile", dockerfile)
+      {_, 0} = System.cmd("docker",
+        ["build", "--no-cache", "-t", "elixir-base",
+          "--build-arg", "erlang_version=#{@base_erlang_version}",
+          "--build-arg", "elixir_version=#{@base_elixir_version}",
+          "."],
         into: IO.stream(:stdio, :line))
     end)
     File.cd!("elixir-builder", fn ->
@@ -38,8 +63,18 @@ defmodule Mix.Tasks.BuildLocalImages do
         into: IO.stream(:stdio, :line))
     end)
     File.cd!("elixir-generate-dockerfile", fn ->
+      prebuilt_erlang_versions_str = Enum.join(@prebuilt_erlang_versions, ",")
       {_, 0} = System.cmd("docker",
-        ["build", "--no-cache", "-t", "elixir-generate-dockerfile", "."],
+        ["build", "--no-cache", "-t", "elixir-generate-dockerfile",
+          "--build-arg", "debian_image=elixir-debian",
+          "--build-arg", "asdf_image=elixir-asdf",
+          "--build-arg", "builder_image=elixir-builder",
+          "--build-arg", "prebuilt_erlang_image_base=#{@prebuilt_erlang_image_base}",
+          "--build-arg", "prebuilt_erlang_image_tag=latest",
+          "--build-arg", "prebuilt_erlang_versions=#{prebuilt_erlang_versions_str}",
+          "--build-arg", "default_erlang_version=#{@base_erlang_version}",
+          "--build-arg", "default_elixir_version=#{@base_elixir_version}",
+          "."],
         into: IO.stream(:stdio, :line))
     end)
   end

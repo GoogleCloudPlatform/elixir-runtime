@@ -1,0 +1,10 @@
+{
+  "schemaVersion": "1.0.0",
+  "commandTests": [
+    {
+      "name": "test_asdf_installation",
+      "command": ["asdf", "--version"],
+      "expectedOutput": ["v[0-9]+\\.[0-9]+\\.[0-9]+\n"]
+    }
+  ]
+}

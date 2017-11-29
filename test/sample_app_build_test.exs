@@ -16,6 +16,8 @@ defmodule SampleAppBuildTest do
   use ExUnit.Case
   import TestHelper
 
+  @moduletag timeout: 120_000
+
   test "Minimal plug app" do
     config = """
       env: flex

@@ -12,12 +12,15 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule ImageStructureTest do
-  use ExUnit.Case
-  import TestHelper
 
-  structure_tests "elixir-debian/structure-test.json", "elixir-debian"
-  structure_tests "elixir-asdf/structure-test.json", "elixir-asdf"
-  structure_tests "elixir-base/structure-test.json", "elixir-base"
-  structure_tests "elixir-builder/structure-test.json", "elixir-builder"
-end
+# Build a prebuilt erlang installer
+
+FROM elixir-asdf AS builder
+ARG erlang_version
+RUN asdf install erlang ${erlang_version}
+
+
+FROM scratch
+ARG erlang_version
+COPY --from=builder /opt/asdf/installs/erlang/${erlang_version} \
+     /opt/asdf/installs/erlang/${erlang_version}

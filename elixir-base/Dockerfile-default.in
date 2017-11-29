@@ -12,12 +12,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-defmodule ImageStructureTest do
-  use ExUnit.Case
-  import TestHelper
 
-  structure_tests "elixir-debian/structure-test.json", "elixir-debian"
-  structure_tests "elixir-asdf/structure-test.json", "elixir-asdf"
-  structure_tests "elixir-base/structure-test.json", "elixir-base"
-  structure_tests "elixir-builder/structure-test.json", "elixir-builder"
-end
+# Base image for Elixir that includes a default Elixir installation.
+
+FROM elixir-asdf
+
+ARG erlang_version
+ARG elixir_version
+
+ENV DEFAULT_ERLANG_VERSION=${erlang_version} \
+    DEFAULT_ELIXIR_VERSION=${elixir_version}
+
+# Install Erlang and Elixir via asdf
+RUN asdf install erlang ${erlang_version} \
+    && asdf global erlang ${erlang_version} \
+    && asdf install elixir ${elixir_version} \
+    && asdf global elixir ${elixir_version} \
+    && mix local.hex --force \
+    && mix local.rebar --force

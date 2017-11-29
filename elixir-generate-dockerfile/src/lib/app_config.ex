@@ -15,7 +15,6 @@
 defmodule GenerateDockerfile.AppConfig do
   require Logger
 
-  @default_workspace_dir "/workspace"
   @default_app_yaml_path "app.yaml"
   @default_service_name "default"
 
@@ -63,8 +62,10 @@ defmodule GenerateDockerfile.AppConfig do
 
   def init(args) do
     try do
-      workspace_dir = Keyword.get(args, :workspace_dir, @default_workspace_dir)
-      data = build_data(workspace_dir)
+      workspace_dir = Keyword.fetch!(args, :workspace_dir)
+      default_erlang_version = Keyword.fetch!(args, :default_erlang_version)
+      default_elixir_version = Keyword.fetch!(args, :default_elixir_version)
+      data = build_data(workspace_dir, default_erlang_version, default_elixir_version)
       {:ok, data}
     catch
       {:usage_error, message} -> {:ok, %{error: message}}
@@ -75,7 +76,7 @@ defmodule GenerateDockerfile.AppConfig do
     {:reply, Map.fetch(data, key), data}
   end
 
-  defp build_data(workspace_dir) do
+  defp build_data(workspace_dir, default_erlang_version, default_elixir_version) do
     project_id = get_project()
     project_id_for_display = project_id || "(unknown)"
     project_id_for_example = project_id || "my-project-id"
@@ -83,7 +84,8 @@ defmodule GenerateDockerfile.AppConfig do
     deps_info = analyze_deps(workspace_dir)
     phoenix_prefix = get_phoenix_prefix(deps_info)
 
-    {erlang_version, elixir_version} = get_tool_versions(workspace_dir)
+    {erlang_version, elixir_version} =
+      get_tool_versions(workspace_dir, default_erlang_version, default_elixir_version)
 
     app_yaml_path = System.get_env("GAE_APPLICATION_YAML_PATH") || @default_app_yaml_path
     app_config = load_config(workspace_dir, app_yaml_path)
@@ -168,26 +170,42 @@ defmodule GenerateDockerfile.AppConfig do
   end
   defp get_phoenix_prefix(_), do: nil
 
-  defp get_tool_versions(workspace_dir) do
+  defp get_tool_versions(workspace_dir, default_erlang_version, default_elixir_version) do
     tool_versions_path = Path.join(workspace_dir, ".tool-versions")
-    if File.regular?(tool_versions_path) do
-      tool_versions_content = File.read!(tool_versions_path)
-      erlang_version =
-        Regex.run(~r{^erlang\s+(.+)$}m, tool_versions_content)
-        |> case do
-          nil -> nil
-          [_, version] -> version
+    {erlang_version, elixir_version} =
+      if File.regular?(tool_versions_path) do
+        tool_versions_content = File.read!(tool_versions_path)
+        erlang_tool_version =
+          Regex.run(~r{^erlang\s+(.+)$}m, tool_versions_content)
+          |> case do
+            nil -> nil
+            [_, version] -> version
+          end
+        elixir_tool_version =
+          Regex.run(~r{^elixir\s+(.+)$}m, tool_versions_content)
+          |> case do
+            nil -> nil
+            [_, version] -> version
+          end
+        if erlang_tool_version && !elixir_tool_version do
+          Logger.warn(
+            "You have set the erlang version but not the elixir version in" <>
+            " your .tool-versions file. It is recommended to specify the" <>
+            " elixir version also, because the default may change at any time.")
         end
-      elixir_version =
-        Regex.run(~r{^elixir\s+(.+)$}m, tool_versions_content)
-        |> case do
-          nil -> nil
-          [_, version] -> version
+        if elixir_tool_version && !erlang_tool_version do
+          Logger.warn(
+            "You have set the elixir version but not the erlang version in" <>
+            " your .tool-versions file. It is recommended to specify the" <>
+            " erlang version also, because the default may change at any time.")
         end
-      {erlang_version, elixir_version}
-    else
-      {nil, nil}
-    end
+        {erlang_tool_version || default_erlang_version,
+         elixir_tool_version || default_elixir_version}
+      else
+        {default_erlang_version, default_elixir_version}
+      end
+    Logger.info("Using Erlang #{erlang_version} and Elixir #{elixir_version}.")
+    {erlang_version, elixir_version}
   end
 
   defp get_env_variables(app_config) do

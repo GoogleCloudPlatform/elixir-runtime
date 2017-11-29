@@ -86,7 +86,7 @@ defmodule TestHelper do
   def build_docker_image(args \\ [], fun) do
     name = generate_name("test-image")
     try do
-      assert_cmd_succeeds(["docker", "build", "-t", name | args] ++ ["."],
+      assert_cmd_succeeds(["docker", "build", "--no-cache", "-t", name | args] ++ ["."],
         stream: true, show: true)
       fun.(name)
     after

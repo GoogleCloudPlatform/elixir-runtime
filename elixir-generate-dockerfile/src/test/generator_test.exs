@@ -33,12 +33,13 @@ defmodule GeneratorTest do
     assert_dockerfile_line("## Project: (unknown)")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
-    assert_dockerfile_line("# ARG requested_erlang_version=")
-    assert_dockerfile_line("# ARG requested_elixir_version=")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
     assert_dockerfile_line("# ARG BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/base")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/asdf")
     assert_dockerfile_line("CMD exec mix run --no-halt")
   end
 
@@ -118,8 +119,10 @@ defmodule GeneratorTest do
         release_app: my_app
       """
     run_generator("minimal", config)
-    assert_dockerfile_line("# ARG requested_erlang_version=")
-    assert_dockerfile_line("# ARG requested_elixir_version=")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/debian")
@@ -137,16 +140,16 @@ defmodule GeneratorTest do
     assert_dockerfile_line("CMD exec /app/bin/my_app foreground --blah")
   end
 
-  test "phoenix 1.3 directory with custom erlang and elixir" do
+  test "phoenix 1.3 directory with custom elixir" do
     run_generator("phoenix_1_3", @minimal_config)
-    assert_dockerfile_line("# ARG requested_erlang_version=")
-    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.1\"")
   end
 
   test "phoenix umbrella 1.3 directory with custom erlang and elixir" do
     run_generator("phoenix_umbrella_1_3", @minimal_config)
-    assert_dockerfile_line("ARG requested_erlang_version=\"20.0\"")
-    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1-otp-20\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.0\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.1-otp-20\"")
   end
 
   test "phoenix 1.3 directory with release app and custom elixir" do
@@ -155,8 +158,8 @@ defmodule GeneratorTest do
         release_app: blog
       """
     run_generator("phoenix_1_3", config)
-    assert_dockerfile_line("# ARG requested_erlang_version=")
-    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.1\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
@@ -166,14 +169,33 @@ defmodule GeneratorTest do
         release_app: blog
       """
     run_generator("phoenix_umbrella_1_3", config)
-    assert_dockerfile_line("ARG requested_erlang_version=\"20.0\"")
-    assert_dockerfile_line("ARG requested_elixir_version=\"1.5.1-otp-20\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.0\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.1-otp-20\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
+  end
+
+  test "minimal directory with prebuilt erlang" do
+    run_generator("minimal", @minimal_config, prebuilt_erlang_versions: "20.1")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.1:latest")
+  end
+
+  test "minimal directory with release app and prebuilt erlang" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: my_app
+      """
+    run_generator("minimal", config, prebuilt_erlang_versions: "20.1")
+    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.1:latest")
   end
 
   defp run_generator(dir, config, args \\ []) do
     config_file = Keyword.get(args, :config_file, nil)
     project = Keyword.get(args, :project, nil)
+    prebuilt_erlang_versions = Keyword.get(args, :prebuilt_erlang_versions, "")
 
     File.rm_rf!(@tmp_dir)
     if dir do
@@ -197,7 +219,12 @@ defmodule GeneratorTest do
       |> Path.join(config_file || "app.yaml")
       |> File.write!(config)
     end
-    Generator.execute(workspace_dir: @tmp_dir, template_dir: @template_dir)
+    Generator.execute(
+      workspace_dir: @tmp_dir,
+      template_dir: @template_dir,
+      prebuilt_erlang_versions: prebuilt_erlang_versions,
+      default_erlang_version: "20.1",
+      default_elixir_version: "1.5.2-otp-20")
   end
 
   defp assert_file_contents(path, expectations) do

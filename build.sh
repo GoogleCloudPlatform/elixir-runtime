@@ -22,6 +22,11 @@ DIRNAME=$(dirname $0)
 PROJECT=
 NAMESPACE="elixir"
 IMAGE_TAG=
+PREBUILT_ERLANG_VERSIONS=()
+mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+DEFAULT_ERLANG_VERSION=20.1
+DEFAULT_ELIXIR_VERSION=1.5.2-otp-20
+BASE_IMAGE_DOCKERFILE=default
 STAGING_FLAG=
 UPLOAD_BUCKET=
 AUTO_YES=
@@ -30,6 +35,8 @@ show_usage() {
   echo 'Usage: ./build.sh [flags...]' >&2
   echo 'Flags:' >&2
   echo '  -b <bucket>: upload a new runtime definition to this gcs bucket (defaults to no upload)' >&2
+  echo '  -e <versions>: comma separated prebuilt erlang versions (defaults to erlang-versions.txt)' >&2
+  echo '  -i: use prebuilt erlang to build base image' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -s: also tag new images as `staging`' >&2
@@ -38,10 +45,16 @@ show_usage() {
 }
 
 OPTIND=1
-while getopts ":b:n:p:st:yh" opt; do
+while getopts ":b:e:in:p:st:yh" opt; do
   case $opt in
     b)
       UPLOAD_BUCKET=$OPTARG
+      ;;
+    e)
+      IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      ;;
+    i)
+      BASE_IMAGE_DOCKERFILE="prebuilt"
       ;;
     n)
       NAMESPACE=$OPTARG
@@ -86,10 +99,12 @@ if [ -z "$IMAGE_TAG" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
   echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
 fi
+COMMA_ERLANG_VERSIONS=$( IFS=, ; echo "${PREBUILT_ERLANG_VERSIONS[*]}" )
 
 echo
 echo "Building images:"
 echo "  gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG"
+echo "  gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG"
 echo "  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG"
@@ -98,6 +113,9 @@ if [ "$STAGING_FLAG" = "true" ]; then
 else
   echo "but NOT tagging them as staging."
 fi
+echo "Base image uses $BASE_IMAGE_DOCKERFILE installation of Erlang."
+echo "Dockerfile generator uses prebuilt Erlang images for versions:"
+echo "  $COMMA_ERLANG_VERSIONS"
 if [ -n "$UPLOAD_BUCKET" ]; then
   echo "Also creating and uploading a new runtime config:"
   echo "  gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml"
@@ -128,9 +146,22 @@ if [ "$STAGING_FLAG" = "true" ]; then
   echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/debian:staging"
 fi
 
+gcloud container builds submit $DIRNAME/elixir-asdf \
+  --config $DIRNAME/elixir-asdf/cloudbuild.yaml --project $PROJECT \
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG"
+if [ "$STAGING_FLAG" = "true" ]; then
+  gcloud container images add-tag --project $PROJECT \
+    gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG \
+    gcr.io/$PROJECT/$NAMESPACE/asdf:staging -q
+  echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/asdf:staging"
+fi
+
+sed -e "s|\$PREBUILT_ERLANG_IMAGE|gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${DEFAULT_ERLANG_VERSION}:latest|g" \
+  < $DIRNAME/elixir-base/Dockerfile-${BASE_IMAGE_DOCKERFILE}.in > $DIRNAME/elixir-base/Dockerfile
 gcloud container builds submit $DIRNAME/elixir-base \
   --config $DIRNAME/elixir-base/cloudbuild.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ERLANG_VERSION=$DEFAULT_ERLANG_VERSION,_ELIXIR_VERSION=$DEFAULT_ELIXIR_VERSION
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
@@ -152,7 +183,7 @@ fi
 
 gcloud container builds submit $DIRNAME/elixir-generate-dockerfile \
   --config $DIRNAME/elixir-generate-dockerfile/cloudbuild.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+  --substitutions ^+^_TAG=$IMAGE_TAG+_NAMESPACE=$NAMESPACE+_PREBUILT_ERLANG_VERSIONS=$COMMA_ERLANG_VERSIONS+_DEFAULT_ERLANG_VERSION=$DEFAULT_ERLANG_VERSION+_DEFAULT_ELIXIR_VERSION=$DEFAULT_ELIXIR_VERSION
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \

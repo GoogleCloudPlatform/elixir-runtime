@@ -27,6 +27,11 @@ cd /app
     --template-dir=/app \
     --workspace-dir=${WORKSPACE_DIR} \
     --debian-image=${ELIXIR_DEBIAN_IMAGE} \
-    --base-image=${ELIXIR_BASE_IMAGE} \
+    --asdf-image=${ELIXIR_ASDF_IMAGE} \
     --builder-image=${ELIXIR_BUILDER_IMAGE} \
+    --prebuilt-erlang-image-base=${PREBUILT_ERLANG_IMAGE_BASE} \
+    --prebuilt-erlang-image-tag=${PREBUILT_ERLANG_IMAGE_TAG} \
+    --prebuilt-erlang-versions=${PREBUILT_ERLANG_VERSIONS} \
+    --default-erlang-version=${DEFAULT_ERLANG_VERSION} \
+    --default-elixir-version=${DEFAULT_ELIXIR_VERSION} \
     "$@"

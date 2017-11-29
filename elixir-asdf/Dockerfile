@@ -13,12 +13,11 @@
 # limitations under the License.
 
 
-# Base image for Elixir
+# Debian plus asdf for installing and managing ERTS and Elixir.
+# Does not include any actual installations of ERTS or Elixir.
 
 FROM elixir-debian
 
-ARG default_erlang_version=20.1
-ARG default_elixir_version=1.5.2-otp-20
 ARG asdf_dir=/opt/asdf
 ARG asdf_version=0.4.0
 
@@ -39,29 +38,9 @@ RUN apt-get update -y \
     && rm -f /var/lib/apt/lists/*_*
 
 # Install Elixir and Erlang via asdf
-ENV DEFAULT_ERLANG_VERSION=${default_erlang_version} \
-    DEFAULT_ELIXIR_VERSION=${default_elixir_version} \
-    ASDF_DIR=${asdf_dir} \
+ENV ASDF_DIR=${asdf_dir} \
     PATH=${asdf_dir}/bin:${asdf_dir}/shims:${PATH}
 RUN mkdir -p ${asdf_dir} \
     && git clone https://github.com/asdf-vm/asdf.git ${asdf_dir} --branch v${asdf_version} \
     && asdf plugin-add erlang \
-    && asdf plugin-add elixir \
-    && asdf install erlang ${default_erlang_version} \
-    && asdf install elixir ${default_elixir_version} \
-    && asdf global erlang ${default_erlang_version} \
-    && asdf global elixir ${default_elixir_version} \
-    && mix local.hex --force \
-    && mix local.rebar --force
-
-# Production environment
-ENV MIX_ENV=prod \
-    REPLACE_OS_VARS=true \
-    TERM=xterm
-
-# Initialize entrypoint
-WORKDIR /app
-EXPOSE 8080
-ENV PORT=8080
-ENTRYPOINT []
-CMD []
+    && asdf plugin-add elixir

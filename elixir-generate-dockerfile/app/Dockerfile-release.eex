@@ -35,46 +35,50 @@ RUN apt-get update -y \
     && rm -f /var/lib/apt/lists/*_*
 <% end %>
 
-## If your application requires a specific version of Erlang and/or Elixir,
-## provide a `.tool-versions` file in your application directory, and also set
-## the versions here. If you change the versions in the future, make sure the
-## `.tool-versions` file matches the setting below. For more information on
-## the asdf tool that is used to manage Erlang and Elixir installation, see
-## https://github.com/asdf-vm/asdf
-<%= if @erlang_version do %>
-ARG requested_erlang_version="<%= @erlang_version %>"
-RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
-      asdf plugin-update erlang \
-      && asdf install erlang ${requested_erlang_version} \
-      && asdf global erlang ${requested_erlang_version}; \
-    fi
+## Specify the versions of Erlang/OTP and Elixir.
+## If you want to change which versions to use, you may do so, but make sure:
+## 1. You make the corresponding change to the versions copied to the runtime
+##    image at the bottom of this Dockerfile.
+## 2. You update your .tool-versions file if you have one.
+## For more information on the asdf tool that is used to manage Erlang and
+## Elixir installation, see https://github.com/asdf-vm/asdf
+ARG erlang_version="<%= @erlang_version %>"
+ARG elixir_version="<%= @elixir_version %>"
+
+<%= if @prebuilt_erlang_image do %>
+## Install Erlang <%= @erlang_version %> from a prebuilt image.
+## If a prebuilt image is not available, use the alternate installation method
+## commented below.
+COPY --from=<%= @prebuilt_erlang_image %> \
+     /opt/asdf/installs/erlang/${erlang_version} \
+     /opt/asdf/installs/erlang/${erlang_version}
+RUN asdf reshim erlang ${erlang_version} \
+    && asdf global erlang ${erlang_version}
+## Alternate installation for Erlang versions that have no prebuilt image.
+# RUN asdf plugin-update erlang \
+#     && asdf install erlang ${erlang_version} \
+#     && asdf global erlang ${erlang_version}
 <% else %>
-# ARG requested_erlang_version="20.1"
-# RUN if test ! -x /opt/asdf/installs/erlang/${requested_erlang_version}/bin/erl; then \
-#       asdf plugin-update erlang \
-#       && asdf install erlang ${requested_erlang_version} \
-#       && asdf global erlang ${requested_erlang_version}; \
-#     fi
+## Install Erlang <%= @erlang_version %> by building from source using asdf.
+## If a prebuilt image is available, the alternate installation method
+## commented below will probably be significantly faster.
+RUN asdf plugin-update erlang \
+    && asdf install erlang ${erlang_version} \
+    && asdf global erlang ${erlang_version}
+## Alternate installation for Erlang versions that have a prebuilt image.
+# COPY --from=<%= @prebuilt_erlang_image %> \
+#      /opt/asdf/installs/erlang/${erlang_version} \
+#      /opt/asdf/installs/erlang/${erlang_version}
+# RUN asdf reshim erlang ${erlang_version} \
+#     && asdf global erlang ${erlang_version}
 <% end %>
-<%= if @elixir_version do %>
-ARG requested_elixir_version="<%= @elixir_version %>"
-RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
-      asdf plugin-update elixir \
-      && asdf install elixir ${requested_elixir_version} \
-      && asdf global elixir ${requested_elixir_version} \
-      && mix local.hex --force \
-      && mix local.rebar --force; \
-    fi
-<% else %>
-# ARG requested_elixir_version="1.5.2-otp-20"
-# RUN if test ! -x /opt/asdf/installs/elixir/${requested_elixir_version}/bin/elixir; then \
-#       asdf plugin-update elixir \
-#       && asdf install elixir ${requested_elixir_version} \
-#       && asdf global elixir ${requested_elixir_version} \
-#       && mix local.hex --force \
-#       && mix local.rebar --force; \
-#     fi
-<% end %>
+
+## Install Elixir <%= @elixir_version %> using asdf.
+RUN asdf plugin-update elixir \
+    && asdf install elixir ${elixir_version} \
+    && asdf global elixir ${elixir_version} \
+    && mix local.hex --force \
+    && mix local.rebar --force
 
 ## Set gcloud project here if your build scripts need to use gcloud.
 <%= if @project_id do %>

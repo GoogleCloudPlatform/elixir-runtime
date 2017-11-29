@@ -19,6 +19,8 @@ defmodule AppConfigTest do
   @test_dir __DIR__
   @cases_dir Path.join(@test_dir, "app_config")
   @tmp_dir Path.join(@test_dir, "tmp")
+  @default_erlang_version "20.1"
+  @default_elixir_version "1.5.2-otp-20"
 
   @minimal_config """
     env: flex
@@ -51,7 +53,11 @@ defmodule AppConfigTest do
       config_path = Path.join(@tmp_dir, config_file || "app.yaml")
       File.write!(config_path, config)
     end
-    {:ok, pid} = AppConfig.start_link(workspace_dir: @tmp_dir, register_module: false)
+    {:ok, pid} = AppConfig.start_link(
+      workspace_dir: @tmp_dir,
+      default_erlang_version: @default_erlang_version,
+      default_elixir_version: @default_elixir_version,
+      register_module: false)
     pid
   end
 
@@ -70,8 +76,8 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:cloud_sql_instances, pid) == []
     assert AppConfig.get!(:entrypoint, pid) == "exec mix run --no-halt"
     assert AppConfig.get!(:build_scripts, pid) == []
-    assert AppConfig.get!(:erlang_version, pid) == nil
-    assert AppConfig.get!(:elixir_version, pid) == nil
+    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
+    assert AppConfig.get!(:elixir_version, pid) == @default_elixir_version
   end
 
   test "custom project" do
@@ -172,6 +178,7 @@ defmodule AppConfigTest do
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
     assert AppConfig.get!(:build_scripts, pid) == ["cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"]
+    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
     assert AppConfig.get!(:elixir_version, pid) == "1.5.1"
   end
 

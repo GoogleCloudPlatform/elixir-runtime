@@ -13,7 +13,9 @@
 # limitations under the License.
 
 
-# Enhanced Debian for running Elixir.
+# Basic Debian environment for running Elixir web apps.
+# Installs dependencies, and sets up locale and environment variables.
+# Does not include ERTS or Elixir, however.
 
 FROM gcr.io/google-appengine/debian8
 
@@ -30,6 +32,16 @@ RUN apt-get update -y \
     && apt-get clean \
     && rm -f /var/lib/apt/lists/*_*
 
-# Make sure locale is set to UTF-8
+# Set locale and other elements of the production environment
 ENV LANG=en_US.UTF-8 \
-    LANGUAGE=en_US:en
+    LANGUAGE=en_US:en \
+    MIX_ENV=prod \
+    REPLACE_OS_VARS=true \
+    TERM=xterm \
+    PORT=8080
+
+# Initialize entrypoint
+WORKDIR /app
+EXPOSE 8080
+ENTRYPOINT []
+CMD []

@@ -78,6 +78,10 @@ gcloud container images add-tag --project $PROJECT \
   gcr.io/$PROJECT/$NAMESPACE/debian:latest -q
 echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG as latest"
 gcloud container images add-tag --project $PROJECT \
+  gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG \
+  gcr.io/$PROJECT/$NAMESPACE/asdf:latest -q
+echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG as latest"
+gcloud container images add-tag --project $PROJECT \
   gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG \
   gcr.io/$PROJECT/$NAMESPACE/base:latest -q
 echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG as latest"
