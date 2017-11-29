@@ -5,3 +5,4 @@
 /tmp/
 /test/tmp
 /elixir-base/Dockerfile
+/erlang-versions.txt

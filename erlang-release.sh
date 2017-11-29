@@ -23,7 +23,9 @@ PROJECT=
 NAMESPACE="elixir"
 IMAGE_TAG="staging"
 PREBUILT_ERLANG_VERSIONS=()
-mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+if [ -f ${DIRNAME}/erlang-versions.txt ]; then
+  mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+fi
 
 show_usage() {
   echo "Usage: ./erlang-release.sh [flags...]" >&2
@@ -38,7 +40,11 @@ OPTIND=1
 while getopts ":b:n:p:t:h" opt; do
   case $opt in
     e)
-      IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      if [ "$OPTARG" = "none" ]; then
+        PREBUILT_ERLANG_VERSIONS=()
+      else
+        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      fi
       ;;
     n)
       NAMESPACE=$OPTARG

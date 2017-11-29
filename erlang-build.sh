@@ -24,7 +24,9 @@ NAMESPACE="elixir"
 IMAGE_TAG=
 ASDF_IMAGE_TAG=staging
 PREBUILT_ERLANG_VERSIONS=()
-mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+if [ -f ${DIRNAME}/erlang-versions.txt ]; then
+  mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+fi
 STAGING_FLAG=
 AUTO_YES=
 
@@ -47,7 +49,11 @@ while getopts ":a:e:n:p:st:yh" opt; do
       ASDF_IMAGE_TAG=$OPTARG
       ;;
     e)
-      IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      if [ "$OPTARG" = "none" ]; then
+        PREBUILT_ERLANG_VERSIONS=()
+      else
+        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      fi
       ;;
     n)
       NAMESPACE=$OPTARG
@@ -91,6 +97,11 @@ fi
 if [ -z "$IMAGE_TAG" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
   echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
+fi
+
+if [ "${#ArrayName[@]}" = "0" ]; then
+  echo "No versions to build. Aborting."
+  exit 1
 fi
 
 echo

@@ -23,7 +23,9 @@ PROJECT=
 NAMESPACE="elixir"
 IMAGE_TAG=
 PREBUILT_ERLANG_VERSIONS=()
-mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+if [ -f ${DIRNAME}/erlang-versions.txt ]; then
+  mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
+fi
 DEFAULT_ERLANG_VERSION=20.1
 DEFAULT_ELIXIR_VERSION=1.5.2-otp-20
 BASE_IMAGE_DOCKERFILE=default
@@ -51,7 +53,11 @@ while getopts ":b:e:in:p:st:yh" opt; do
       UPLOAD_BUCKET=$OPTARG
       ;;
     e)
-      IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      if [ "$OPTARG" = "none" ]; then
+        PREBUILT_ERLANG_VERSIONS=()
+      else
+        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+      fi
       ;;
     i)
       BASE_IMAGE_DOCKERFILE="prebuilt"
@@ -114,8 +120,12 @@ else
   echo "but NOT tagging them as staging."
 fi
 echo "Base image uses $BASE_IMAGE_DOCKERFILE installation of Erlang."
-echo "Dockerfile generator uses prebuilt Erlang images for versions:"
-echo "  $COMMA_ERLANG_VERSIONS"
+if [ "${#ArrayName[@]}" = "0" ]; then
+  echo "Dockerfile generator does not use any prebuilt Erlang images."
+else
+  echo "Dockerfile generator uses prebuilt Erlang images for versions:"
+  echo "  $COMMA_ERLANG_VERSIONS"
+fi
 if [ -n "$UPLOAD_BUCKET" ]; then
   echo "Also creating and uploading a new runtime config:"
   echo "  gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml"
