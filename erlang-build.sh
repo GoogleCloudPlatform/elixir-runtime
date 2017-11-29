@@ -90,6 +90,11 @@ while getopts ":a:e:n:p:st:yh" opt; do
 done
 shift $((OPTIND-1))
 
+if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
+  echo "No versions to build. Aborting."
+  exit 1
+fi
+
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
   echo "Using project from gcloud config: $PROJECT" >&2
@@ -97,11 +102,6 @@ fi
 if [ -z "$IMAGE_TAG" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
   echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
-fi
-
-if [ "${#ArrayName[@]}" = "0" ]; then
-  echo "No versions to build. Aborting."
-  exit 1
 fi
 
 echo

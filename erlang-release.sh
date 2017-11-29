@@ -75,6 +75,11 @@ while getopts ":b:n:p:t:h" opt; do
 done
 shift $((OPTIND-1))
 
+if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
+  echo "No versions to release. Aborting."
+  exit 1
+fi
+
 if [ -z "$PROJECT" ]; then
   PROJECT=$(gcloud config get-value project)
   echo "**** Using project from gcloud config: $PROJECT" >&2

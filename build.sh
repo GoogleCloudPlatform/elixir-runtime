@@ -120,7 +120,7 @@ else
   echo "but NOT tagging them as staging."
 fi
 echo "Base image uses $BASE_IMAGE_DOCKERFILE installation of Erlang."
-if [ "${#ArrayName[@]}" = "0" ]; then
+if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
   echo "Dockerfile generator does not use any prebuilt Erlang images."
 else
   echo "Dockerfile generator uses prebuilt Erlang images for versions:"
