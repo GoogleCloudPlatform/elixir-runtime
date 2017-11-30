@@ -30,7 +30,17 @@ defmodule GenerateDockerfile.Generator do
     "Dockerfile",
     ".git",
     ".hg",
-    ".svn"
+    ".svn",
+    "_build",
+    "deps",
+    "erl_crash.dump",
+  ]
+  @phoenix_dockerignore [
+    "priv/static",
+  ]
+  @brunch_dockerignore [
+    "npm-debug.log",
+    "node_modules",
   ]
 
   def execute(opts) do
@@ -57,7 +67,8 @@ defmodule GenerateDockerfile.Generator do
         asdf_image,
         builder_image)
       write_dockerfile(workspace_dir, template_dir, assigns)
-      write_dockerignore(workspace_dir)
+      desired_dockerignore_entries = determine_desired_dockerignore_entries()
+      write_dockerignore(workspace_dir, desired_dockerignore_entries)
     end)
 
     :ok
@@ -160,7 +171,20 @@ defmodule GenerateDockerfile.Generator do
       |> Enum.join("\n")
   end
 
-  defp write_dockerignore(workspace_dir) do
+  defp determine_desired_dockerignore_entries() do
+    brunch_dir = AppConfig.get!(:brunch_dir)
+    brunch_entries =
+      case brunch_dir do
+        nil -> []
+        "." -> @brunch_dockerignore
+        brunch_dir -> Enum.map(@brunch_dockerignore, &(Path.join(brunch_dir, &1)))
+      end
+    phoenix_entries = if brunch_dir == nil, do: [], else: @phoenix_dockerignore
+    [AppConfig.get!(:app_yaml_path) | @common_dockerignore] ++
+      brunch_entries ++ phoenix_entries
+  end
+
+  defp write_dockerignore(workspace_dir, desired_entries) do
     write_path = Path.join(workspace_dir, ".dockerignore")
     existing_entries = if File.exists?(write_path) do
       write_path
@@ -169,7 +193,6 @@ defmodule GenerateDockerfile.Generator do
     else
       []
     end
-    desired_entries = [AppConfig.get!(:app_yaml_path) | @common_dockerignore]
     File.open!(write_path, [:append], fn (io) ->
       Enum.each(desired_entries -- existing_entries, fn (entry) ->
         IO.puts(io, entry)

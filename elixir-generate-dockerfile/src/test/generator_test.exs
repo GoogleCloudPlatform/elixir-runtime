@@ -29,6 +29,8 @@ defmodule GeneratorTest do
   test "minimal directory with minimal config" do
     run_generator("minimal", @minimal_config)
     assert_ignore_line("Dockerfile")
+    refute_ignore_line("priv/static")
+    refute_file_contents(Path.join(@tmp_dir, ".dockerignore"), ~r{node_modules}m)
     assert_dockerfile_line("## Service: default")
     assert_dockerfile_line("## Project: (unknown)")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
@@ -38,7 +40,8 @@ defmodule GeneratorTest do
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
-    assert_dockerfile_line("# ARG BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
+    assert_dockerfile_line("# ENV BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
+    refute_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/asdf")
     assert_dockerfile_line("CMD exec mix run --no-halt")
   end
@@ -89,7 +92,7 @@ defmodule GeneratorTest do
           - instance3
       """
     run_generator("minimal", config)
-    assert_dockerfile_line("ARG BUILD_CLOUDSQL_INSTANCES=\"cloud-sql-instance-name,instance2:hi:there,instance3\"")
+    assert_dockerfile_line("ENV BUILD_CLOUDSQL_INSTANCES=\"cloud-sql-instance-name,instance2:hi:there,instance3\"")
   end
 
   test "minimal directory with build scripts" do
@@ -140,16 +143,29 @@ defmodule GeneratorTest do
     assert_dockerfile_line("CMD exec /app/bin/my_app foreground --blah")
   end
 
+  test "phoenix 1.2 directory" do
+    run_generator("phoenix_1_2", @minimal_config)
+    assert_ignore_line("priv/static")
+    assert_ignore_line("node_modules")
+    refute_dockerfile_line("RUN mix release --env=prod --verbose")
+  end
+
   test "phoenix 1.3 directory with custom elixir" do
     run_generator("phoenix_1_3", @minimal_config)
+    assert_ignore_line("priv/static")
+    assert_ignore_line("assets/node_modules")
     assert_dockerfile_line("ARG erlang_version=\"20.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.1\"")
+    refute_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
   test "phoenix umbrella 1.3 directory with custom erlang and elixir" do
     run_generator("phoenix_umbrella_1_3", @minimal_config)
+    assert_ignore_line("priv/static")
+    assert_ignore_line("apps/blog_web/assets/node_modules")
     assert_dockerfile_line("ARG erlang_version=\"20.0\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.1-otp-20\"")
+    refute_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
   test "phoenix 1.3 directory with release app and custom elixir" do
@@ -237,16 +253,38 @@ defmodule GeneratorTest do
     contents
   end
 
+  defp refute_file_contents(path, expectations) do
+    expectations = List.wrap(expectations)
+    contents = File.read!(path)
+    Enum.each(expectations, fn expectation ->
+      refute(contents =~ expectation,
+        "File #{path} contained #{inspect(expectation)}")
+    end)
+    contents
+  end
+
   defp assert_dockerfile_line(line) do
     line = Regex.escape(line)
     path = Path.join(@tmp_dir, "Dockerfile")
     assert_file_contents(path, ~r{^#{line}}m)
   end
 
+  defp refute_dockerfile_line(line) do
+    line = Regex.escape(line)
+    path = Path.join(@tmp_dir, "Dockerfile")
+    refute_file_contents(path, ~r{^#{line}}m)
+  end
+
   defp assert_ignore_line(line) do
     line = Regex.escape(line)
     path = Path.join(@tmp_dir, ".dockerignore")
     assert_file_contents(path, ~r{^#{line}}m)
+  end
+
+  defp refute_ignore_line(line) do
+    line = Regex.escape(line)
+    path = Path.join(@tmp_dir, ".dockerignore")
+    refute_file_contents(path, ~r{^#{line}}m)
   end
 
 end

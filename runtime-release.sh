@@ -25,7 +25,7 @@ IMAGE_TAG="staging"
 UPLOAD_BUCKET=
 
 show_usage() {
-  echo "Usage: ./release.sh [flags...]" >&2
+  echo "Usage: ./runtime-release.sh [flags...]" >&2
   echo "Flags:" >&2
   echo '  -b <bucket>: promote the runtime definition in this gcs bucket (defaults to no promote)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2

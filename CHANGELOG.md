@@ -18,6 +18,26 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2017-11-29-234522
+
+This is a major overhaul of the runtime with significant new features and
+fixes. Among those:
+
+* Deployments can now be configured to build a release using Distillery, which
+  yields a more efficient deployment.
+* Applications can provide a `.tool-versions` file specifying the particular
+  Erlang and Elixir versions to use. These are installed at build time.
+* The builder image now includes a C compiler, so dependencies with a C
+  component should now install properly.
+* Builds exclude directories that could contain prior development artifacts,
+  such as deps, _build, and node_modules, to prevent those from leaking into
+  the production build.
+* The builder image now includes gcloud, so build steps can easily do things
+  like download files from Cloud Storage.
+
+The test suite has also been fleshed out, and a bunch of minor issues have
+been fixed, so the runtime should be more stable moving forward.
+
 ## elixir-2017-10-17-142851
 
 * Generate the correct brunch build script for phoenix umbrella apps.

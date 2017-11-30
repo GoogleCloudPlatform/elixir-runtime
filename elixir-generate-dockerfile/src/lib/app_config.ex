@@ -82,7 +82,8 @@ defmodule GenerateDockerfile.AppConfig do
     project_id_for_example = project_id || "my-project-id"
 
     deps_info = analyze_deps(workspace_dir)
-    phoenix_prefix = get_phoenix_prefix(deps_info)
+    phoenix_version = Map.get(deps_info, :phoenix)
+    phoenix_prefix = get_phoenix_prefix(phoenix_version)
 
     {erlang_version, elixir_version} =
       get_tool_versions(workspace_dir, default_erlang_version, default_elixir_version)
@@ -98,7 +99,8 @@ defmodule GenerateDockerfile.AppConfig do
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
     entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app)
-    build_scripts = get_build_scripts(runtime_config, workspace_dir, phoenix_prefix)
+    brunch_dir = get_brunch_dir(workspace_dir, phoenix_version)
+    build_scripts = get_build_scripts(runtime_config, brunch_dir, phoenix_prefix)
 
     %{
       workspace_dir: workspace_dir,
@@ -114,6 +116,8 @@ defmodule GenerateDockerfile.AppConfig do
       env_variables: env_variables,
       install_packages: install_packages,
       cloud_sql_instances: cloud_sql_instances,
+      phoenix_version: phoenix_version,
+      brunch_dir: brunch_dir,
       entrypoint: entrypoint,
       build_scripts: build_scripts
     }
@@ -165,10 +169,10 @@ defmodule GenerateDockerfile.AppConfig do
     end)
   end
 
-  defp get_phoenix_prefix(%{phoenix: version}) do
+  defp get_phoenix_prefix(nil), do: nil
+  defp get_phoenix_prefix(version) do
     if Version.compare(version, "1.3.0") == :lt, do: "phoenix", else: "phx"
   end
-  defp get_phoenix_prefix(_), do: nil
 
   defp get_tool_versions(workspace_dir, default_erlang_version, default_elixir_version) do
     tool_versions_path = Path.join(workspace_dir, ".tool-versions")
@@ -305,23 +309,8 @@ defmodule GenerateDockerfile.AppConfig do
     end
   end
 
-  defp get_build_scripts(runtime_config, workspace_dir, phoenix_prefix) do
-    runtime_config
-    |> Map.get_lazy("build", fn -> default_build_scripts(workspace_dir, phoenix_prefix) end)
-    |> List.wrap
-    |> validate_build_scripts
-  end
-
-  defp default_build_scripts(_workspace_dir, nil), do: []
-  defp default_build_scripts(workspace_dir, phoenix_prefix) do
-    case find_brunch_configs_relative_dir(workspace_dir) do
-      nil -> []
-      "." -> ["npm install && node_modules/brunch/bin/brunch build --production && mix #{phoenix_prefix}.digest"]
-      relative_dir -> ["cd #{relative_dir} && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix #{phoenix_prefix}.digest"]
-    end
-  end
-
-  defp find_brunch_configs_relative_dir(workspace_dir) do
+  defp get_brunch_dir(_workspace_dir, nil), do: nil
+  defp get_brunch_dir(workspace_dir, _phoenix_version) do
     apps_dir = Path.join(workspace_dir, "apps")
     app_dirs = if File.dir?(apps_dir) do
       apps_dir
@@ -342,6 +331,21 @@ defmodule GenerateDockerfile.AppConfig do
       ^workspace_dir -> "."
       brunch_dir -> Path.relative_to(brunch_dir, workspace_dir)
     end
+  end
+
+  defp get_build_scripts(runtime_config, brunch_dir, phoenix_prefix) do
+    runtime_config
+    |> Map.get_lazy("build", fn -> default_build_scripts(brunch_dir, phoenix_prefix) end)
+    |> List.wrap
+    |> validate_build_scripts
+  end
+
+  defp default_build_scripts(nil, _phoenix_prefix), do: []
+  defp default_build_scripts(".", phoenix_prefix) do
+    ["npm install && node_modules/brunch/bin/brunch build --production && mix #{phoenix_prefix}.digest"]
+  end
+  defp default_build_scripts(brunch_dir, phoenix_prefix) do
+    ["cd #{brunch_dir} && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix #{phoenix_prefix}.digest"]
   end
 
   defp validate_build_scripts(scripts) do

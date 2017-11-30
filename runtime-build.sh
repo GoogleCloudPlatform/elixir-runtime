@@ -34,7 +34,7 @@ UPLOAD_BUCKET=
 AUTO_YES=
 
 show_usage() {
-  echo 'Usage: ./build.sh [flags...]' >&2
+  echo 'Usage: ./runtime-build.sh [flags...]' >&2
   echo 'Flags:' >&2
   echo '  -b <bucket>: upload a new runtime definition to this gcs bucket (defaults to no upload)' >&2
   echo '  -e <versions>: comma separated prebuilt erlang versions (defaults to erlang-versions.txt)' >&2

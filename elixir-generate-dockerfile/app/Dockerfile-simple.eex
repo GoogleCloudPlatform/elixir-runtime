@@ -99,9 +99,9 @@ ENV <%= @env_variables %>
 ## list them here, comma-delimited. This environment variable tells the
 ## "access_cloud_sql" script which databases to connect to.
 <%= if @cloud_sql_instances == "" do %>
-# ARG BUILD_CLOUDSQL_INSTANCES="<%= @project_id_for_example %>:db-region:db-name"
+# ENV BUILD_CLOUDSQL_INSTANCES="<%= @project_id_for_example %>:db-region:db-name"
 <% else %>
-ARG BUILD_CLOUDSQL_INSTANCES="<%= @cloud_sql_instances %>"
+ENV BUILD_CLOUDSQL_INSTANCES="<%= @cloud_sql_instances %>"
 <% end %>
 
 ## Copy the application files.
@@ -115,7 +115,7 @@ COPY . /app/
 # ENV GOOGLE_APPLICATION_CREDENTIALS=/app/build-credentials.json
 
 ## Install dependencies and compile the application.
-RUN mix deps.get && mix compile
+RUN mix do deps.get, deps.compile, compile
 
 ## Run application build scripts here.
 ## Scripts that require access to the application CloudSQL instances should
@@ -161,9 +161,7 @@ COPY --from=app-build /opt/asdf/installs/elixir/${elixir_version} \
 RUN asdf reshim erlang ${erlang_version} \
     && asdf reshim elixir ${elixir_version} \
     && asdf global erlang ${erlang_version} \
-    && asdf global elixir ${elixir_version} \
-    && mix local.hex --force \
-    && mix local.rebar --force
+    && asdf global elixir ${elixir_version}
 
 ## Copy the built application from the build image.
 COPY --from=app-build /app/ /app/
