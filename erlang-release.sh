@@ -37,7 +37,7 @@ show_usage() {
 }
 
 OPTIND=1
-while getopts ":b:n:p:t:h" opt; do
+while getopts ":e:n:p:t:h" opt; do
   case $opt in
     e)
       if [ "$OPTARG" = "none" ]; then
