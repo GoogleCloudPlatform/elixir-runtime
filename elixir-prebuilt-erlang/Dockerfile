@@ -17,7 +17,9 @@
 
 FROM elixir-asdf AS builder
 ARG erlang_version
-RUN asdf install erlang ${erlang_version}
+RUN asdf update \
+    && asdf plugin-update --all \
+    && asdf install erlang ${erlang_version}
 
 
 FROM scratch
