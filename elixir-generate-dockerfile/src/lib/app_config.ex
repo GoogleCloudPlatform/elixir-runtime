@@ -17,6 +17,7 @@ defmodule GenerateDockerfile.AppConfig do
 
   @default_app_yaml_path "app.yaml"
   @default_service_name "default"
+  @default_mix_env "prod"
 
   def start_link(args) do
     register_module = Keyword.get(args, :register_module, true)
@@ -96,6 +97,7 @@ defmodule GenerateDockerfile.AppConfig do
     service_name = Map.get(app_config, "service", @default_service_name)
     release_app = Map.get(runtime_config, "release_app")
     env_variables = get_env_variables(app_config)
+    mix_env = Map.get(env_variables, "MIX_ENV", @default_mix_env)
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
     entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app)
@@ -114,6 +116,7 @@ defmodule GenerateDockerfile.AppConfig do
       service_name: service_name,
       release_app: release_app,
       env_variables: env_variables,
+      mix_env: mix_env,
       install_packages: install_packages,
       cloud_sql_instances: cloud_sql_instances,
       phoenix_version: phoenix_version,
@@ -302,7 +305,7 @@ defmodule GenerateDockerfile.AppConfig do
     cond do
       String.starts_with?(entrypoint, "exec ") ->
         entrypoint
-      Regex.match?(~r{;|&&|\|}, entrypoint) ->
+      Regex.match?(~r{=|;|&&|\|}, entrypoint) ->
         entrypoint
       true ->
         "exec #{entrypoint}"

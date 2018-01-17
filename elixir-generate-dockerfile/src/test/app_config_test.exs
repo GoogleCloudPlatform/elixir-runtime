@@ -72,6 +72,7 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:runtime_config, pid) == %{}
     assert AppConfig.get!(:service_name, pid) == "default"
     assert AppConfig.get!(:env_variables, pid) == %{}
+    assert AppConfig.get!(:mix_env, pid) == "prod"
     assert AppConfig.get!(:install_packages, pid) == []
     assert AppConfig.get!(:cloud_sql_instances, pid) == []
     assert AppConfig.get!(:entrypoint, pid) == "exec mix run --no-halt"
@@ -126,6 +127,19 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:runtime_config, pid)["foo"] == "bar"
   end
 
+  test "MIX_ENV set from env_variables" do
+    config = """
+      env: flex
+      runtime: gs://elixir-runtime/elixir.yaml
+      env_variables:
+        MIX_ENV: staging
+      """
+    pid = AppConfigTest.setup_test("minimal", config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:env_variables, pid) == %{"MIX_ENV" => "staging"}
+    assert AppConfig.get!(:mix_env, pid) == "staging"
+  end
+
   test "release_app set" do
     config = """
       env: flex
@@ -162,6 +176,17 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("minimal", config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "cd myapp; mix app.start"
+  end
+
+  test "entrypoint including environment variables" do
+    config = """
+      env: flex
+      runtime: gs://elixir-runtime/elixir.yaml
+      entrypoint: MIX_ENV=staging mix app.start
+      """
+    pid = AppConfigTest.setup_test("minimal", config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:entrypoint, pid) == "MIX_ENV=staging mix app.start"
   end
 
   test "entrypoint already including exec" do

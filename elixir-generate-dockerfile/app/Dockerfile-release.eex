@@ -127,7 +127,7 @@ RUN mix do deps.get, deps.compile, compile
 <% end %>
 
 ## Create the release.
-RUN mix release --env=prod --verbose
+RUN mix release --env=<%= @mix_env %> --verbose
 
 
 ################################################################################
@@ -152,7 +152,7 @@ RUN apt-get update -y \
 <% end %>
 
 ## Copy built release from build stage into /app
-COPY --from=app-build /app/_build/prod/rel/<%= @release_app %> /app/
+COPY --from=app-build /app/_build/<%= @mix_env %>/rel/<%= @release_app %> /app/
 
 ## Command to start the release.
 CMD <%= @entrypoint %>
