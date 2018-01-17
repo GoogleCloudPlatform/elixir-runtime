@@ -18,8 +18,8 @@
 FROM elixir-asdf
 
 # Parameters
-ARG nodejs_version=8.9.1
-ARG gcloud_version=180.0.1
+ARG nodejs_version=8.9.4
+ARG gcloud_version=185.0.0
 ARG nodejs_dir=/opt/nodejs
 ARG gcloud_dir=/opt/gcloud
 ARG misc_bin_dir=/opt/bin

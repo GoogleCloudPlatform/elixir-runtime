@@ -16,8 +16,8 @@ defmodule GenerateDockerfile.Generator do
   alias GenerateDockerfile.AppConfig
   require Logger
 
-  @default_erlang_version "20.1"
-  @default_elixir_version "1.5.2-otp-20"
+  @default_erlang_version "20.2"
+  @default_elixir_version "1.5.3-otp-20"
   @default_workspace_dir "/workspace"
   @default_debian_image "gcr.io/gcp-elixir/runtime/debian"
   @default_asdf_image "gcr.io/gcp-elixir/runtime/asdf"

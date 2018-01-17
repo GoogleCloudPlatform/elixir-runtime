@@ -18,6 +18,15 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2018-01-17-121145
+
+* Support for building releases in an environment other than `prod`.
+* OTP 20.2 is now prebuilt. Update default OTP from 20.1 to 20.2.
+* Update default Elixir from 1.5.2 to 1.5.3.
+* Update NodeJS to 8.9.4 and GCloud to 185.0.0 in the build image.
+* Don't attempt to prepend `exec` to entrypoints that set environment variables
+  inline.
+
 ## elixir-2017-11-29-234522
 
 This is a major overhaul of the runtime with significant new features and

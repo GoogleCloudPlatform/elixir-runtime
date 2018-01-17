@@ -19,8 +19,8 @@ defmodule AppConfigTest do
   @test_dir __DIR__
   @cases_dir Path.join(@test_dir, "app_config")
   @tmp_dir Path.join(@test_dir, "tmp")
-  @default_erlang_version "20.1"
-  @default_elixir_version "1.5.2-otp-20"
+  @default_erlang_version "20.2"
+  @default_elixir_version "1.5.3-otp-20"
 
   @minimal_config """
     env: flex

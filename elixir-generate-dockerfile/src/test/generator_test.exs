@@ -35,8 +35,8 @@ defmodule GeneratorTest do
     assert_dockerfile_line("## Project: (unknown)")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
@@ -123,8 +123,8 @@ defmodule GeneratorTest do
       """
     run_generator("minimal", config)
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/builder AS app-build")
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
@@ -166,7 +166,7 @@ defmodule GeneratorTest do
     run_generator("phoenix_1_3", @minimal_config)
     assert_ignore_line("priv/static")
     assert_ignore_line("assets/node_modules")
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.1\"")
     refute_dockerfile_line("RUN mix release --env=prod --verbose")
   end
@@ -186,7 +186,7 @@ defmodule GeneratorTest do
         release_app: blog
       """
     run_generator("phoenix_1_3", config)
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.1\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
@@ -203,10 +203,10 @@ defmodule GeneratorTest do
   end
 
   test "minimal directory with prebuilt erlang" do
-    run_generator("minimal", @minimal_config, prebuilt_erlang_versions: "20.1")
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
-    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.1:latest")
+    run_generator("minimal", @minimal_config, prebuilt_erlang_versions: "20.2")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
+    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.2:latest")
   end
 
   test "minimal directory with release app and prebuilt erlang" do
@@ -214,10 +214,10 @@ defmodule GeneratorTest do
       runtime_config:
         release_app: my_app
       """
-    run_generator("minimal", config, prebuilt_erlang_versions: "20.1")
-    assert_dockerfile_line("ARG erlang_version=\"20.1\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.5.2-otp-20\"")
-    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.1:latest")
+    run_generator("minimal", config, prebuilt_erlang_versions: "20.2")
+    assert_dockerfile_line("ARG erlang_version=\"20.2\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
+    assert_dockerfile_line("COPY --from=gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-20.2:latest")
   end
 
   defp run_generator(dir, config, args \\ []) do
@@ -251,8 +251,8 @@ defmodule GeneratorTest do
       workspace_dir: @tmp_dir,
       template_dir: @template_dir,
       prebuilt_erlang_versions: prebuilt_erlang_versions,
-      default_erlang_version: "20.1",
-      default_elixir_version: "1.5.2-otp-20")
+      default_erlang_version: "20.2",
+      default_elixir_version: "1.5.3-otp-20")
   end
 
   defp assert_file_contents(path, expectations) do
