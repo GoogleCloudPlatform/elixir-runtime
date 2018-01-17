@@ -60,12 +60,36 @@ defmodule SampleAppBuildTest do
       end)
   end
 
+  test "Minimal phoenix app in staging environment" do
+    config = """
+      env: flex
+      runtime: elixir
+      env_variables:
+        MIX_ENV: staging
+      entrypoint: MIX_ENV=staging mix phx.server
+      """
+    run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
+  end
+
+  test "Minimal phoenix app with release in staging environment" do
+    config = """
+      env: flex
+      runtime: elixir
+      runtime_config:
+        release_app: minimal_phoenix
+      env_variables:
+        MIX_ENV: staging
+      """
+    run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
+  end
+
   @apps_dir Path.join(__DIR__, "sample_apps")
   @tmp_dir Path.join(__DIR__, "tmp")
 
   def run_app_test(app_name, config, opts \\ []) do
     check_container = Keyword.get(opts, :check_container, nil)
     check_image = Keyword.get(opts, :check_image, nil)
+    expected_output = Keyword.get(opts, :expected_output, ~r{Hello, world!})
 
     File.rm_rf!(@tmp_dir)
     @apps_dir
@@ -90,7 +114,7 @@ defmodule SampleAppBuildTest do
             check_container.(container)
           end
           assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080"],
-            ~r{Hello, world!}, timeout: 10, show: true, verbose: true)
+            expected_output, timeout: 10, show: true, verbose: true)
         end)
       end)
     end)

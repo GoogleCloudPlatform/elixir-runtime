@@ -143,6 +143,18 @@ defmodule GeneratorTest do
     assert_dockerfile_line("CMD exec /app/bin/my_app foreground --blah")
   end
 
+  test "minimal directory with release app and custom mix_env" do
+    config = @minimal_config <> """
+      runtime_config:
+        release_app: my_app
+      env_variables:
+        MIX_ENV: staging
+      """
+    run_generator("minimal", config)
+    assert_dockerfile_line("RUN mix release --env=staging --verbose")
+    assert_dockerfile_line("COPY --from=app-build /app/_build/staging/rel/my_app /app/")
+  end
+
   test "phoenix 1.2 directory" do
     run_generator("phoenix_1_2", @minimal_config)
     assert_ignore_line("priv/static")

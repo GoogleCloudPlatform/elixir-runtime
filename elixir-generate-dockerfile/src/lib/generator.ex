@@ -124,6 +124,7 @@ defmodule GenerateDockerfile.Generator do
       builder_packages: packages,
       runtime_packages: packages,
       env_variables: AppConfig.get!(:env_variables) |> render_env,
+      mix_env: AppConfig.get!(:mix_env),
       cloud_sql_instances: AppConfig.get!(:cloud_sql_instances) |> Enum.join(","),
       build_scripts: AppConfig.get!(:build_scripts) |> render_commands,
       entrypoint: AppConfig.get!(:entrypoint)

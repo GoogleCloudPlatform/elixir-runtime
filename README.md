@@ -99,6 +99,34 @@ You may update your application by modifying your source and redeploying.
 Again, the Elixir Runtime will take care of rebuilding your application in
 the cloud when you deploy.
 
+### Changing the environment/config
+
+If your application needs environment variables to be set, you can use the
+standard `env_variables:` field in the `app.yaml` file. For example:
+
+    env_variables:
+      MY_VAR: value1
+      SERVICE_HOSTNAME: example.com
+
+This will set those environment variables both at build time and at runtime.
+
+One environment variable of particular note is `MIX_ENV`, which controls the
+"environment" your application runs in. It can affect build parameters such as
+compilation settings; and many frameworks, including Phoenix, use it to select
+a set of configuration to use.
+
+By default, the Elixir runtime builds and runs your app in the `prod`
+environment, but you can change this by setting the `MIX_ENV` environment
+variable. For example:
+
+    env_variables:
+      MIX_ENV: staging
+
+This will not only set the `MIX_ENV` during the building and running of your
+application, but if you are using a Distillery release, it will also cause
+Distillery to build the app with that environment. (So make sure there is a
+corresponding clause for the environment in your `rel/config.exs` file.)
+
 ### Specifying the Erlang and Elixir versions
 
 The Elixir Runtime uses the [asdf](https://github.com/asdf-vm/asdf) tool to
