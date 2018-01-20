@@ -20,7 +20,7 @@ defmodule ElixirRuntime.Mixfile do
       app: :elixir_runtime,
       version: "0.1.0",
       elixir: "~> 1.5",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       deps: deps()
     ]
   end
@@ -48,7 +48,6 @@ defmodule Mix.Tasks.Hello do
   use Mix.Task
 
   def run(_args) do
-    IO.puts "Running tests"
+    IO.puts("Running tests")
   end
-
 end

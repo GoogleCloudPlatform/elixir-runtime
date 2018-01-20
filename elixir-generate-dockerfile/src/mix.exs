@@ -20,7 +20,7 @@ defmodule GenerateDockerfile.Mixfile do
       app: :generate_dockerfile,
       version: "0.1.0",
       elixir: "~> 1.5",
-      start_permanent: Mix.env == :prod,
+      start_permanent: Mix.env() == :prod,
       escript: escript(),
       deps: deps()
     ]
@@ -39,7 +39,7 @@ defmodule GenerateDockerfile.Mixfile do
 
   def escript do
     [
-      main_module: GenerateDockerfile,
+      main_module: GenerateDockerfile
     ]
   end
 

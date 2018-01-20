@@ -18,11 +18,12 @@ defmodule BaseImageSampleAppsTest do
 
   test "Minimal plug app" do
     dockerfile = """
-      FROM elixir-base
-      COPY . /app/
-      RUN mix do deps.get, compile
-      CMD mix run --no-halt
-      """
+    FROM elixir-base
+    COPY . /app/
+    RUN mix do deps.get, compile
+    CMD mix run --no-halt
+    """
+
     run_app_test("minimal_plug", dockerfile)
   end
 
@@ -31,9 +32,11 @@ defmodule BaseImageSampleAppsTest do
 
   def run_app_test(app_name, dockerfile_content) do
     File.rm_rf!(@tmp_dir)
+
     @apps_dir
     |> Path.join(app_name)
     |> File.cp_r!(@tmp_dir)
+
     @tmp_dir
     |> Path.join("Dockerfile")
     |> File.write!(dockerfile_content)
@@ -41,8 +44,13 @@ defmodule BaseImageSampleAppsTest do
     File.cd!(@tmp_dir, fn ->
       build_docker_image(fn image ->
         run_docker_daemon(["-p", "8080:8080", image], fn _container ->
-          assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080"],
-            ~r{Hello, world!}, timeout: 10, show: true, verbose: true)
+          assert_cmd_output(
+            ["curl", "-s", "-S", "http://localhost:8080"],
+            ~r{Hello, world!},
+            timeout: 10,
+            show: true,
+            verbose: true
+          )
         end)
       end)
     end)

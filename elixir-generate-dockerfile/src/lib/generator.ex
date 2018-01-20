@@ -33,14 +33,14 @@ defmodule GenerateDockerfile.Generator do
     ".svn",
     "_build",
     "deps",
-    "erl_crash.dump",
+    "erl_crash.dump"
   ]
   @phoenix_dockerignore [
-    "priv/static",
+    "priv/static"
   ]
   @brunch_dockerignore [
     "npm-debug.log",
-    "node_modules",
+    "node_modules"
   ]
 
   def execute(opts) do
@@ -48,24 +48,34 @@ defmodule GenerateDockerfile.Generator do
     debian_image = get_arg(opts, :debian_image, @default_debian_image)
     asdf_image = get_arg(opts, :asdf_image, @default_asdf_image)
     builder_image = get_arg(opts, :builder_image, @default_builder_image)
-    prebuilt_erlang_image_base = get_arg(opts, :prebuilt_erlang_image_base, @default_prebuilt_erlang_image_base)
-    prebuilt_erlang_image_tag = get_arg(opts, :prebuilt_erlang_image_tag, @default_prebuilt_erlang_image_tag)
+
+    prebuilt_erlang_image_base =
+      get_arg(opts, :prebuilt_erlang_image_base, @default_prebuilt_erlang_image_base)
+
+    prebuilt_erlang_image_tag =
+      get_arg(opts, :prebuilt_erlang_image_tag, @default_prebuilt_erlang_image_tag)
+
     prebuilt_erlang_versions = get_arg(opts, :prebuilt_erlang_versions, "") |> String.split(",")
     default_erlang_version = get_arg(opts, :default_erlang_version, @default_erlang_version)
     default_elixir_version = get_arg(opts, :default_elixir_version, @default_elixir_version)
+
     template_dir =
       Keyword.get(opts, :template_dir, @default_template_dir)
-      |> Path.expand
+      |> Path.expand()
 
     File.cd!(workspace_dir, fn ->
       start_app_config(workspace_dir, default_erlang_version, default_elixir_version)
-      assigns = build_assigns(
-        prebuilt_erlang_versions,
-        prebuilt_erlang_image_base,
-        prebuilt_erlang_image_tag,
-        debian_image,
-        asdf_image,
-        builder_image)
+
+      assigns =
+        build_assigns(
+          prebuilt_erlang_versions,
+          prebuilt_erlang_image_base,
+          prebuilt_erlang_image_tag,
+          debian_image,
+          asdf_image,
+          builder_image
+        )
+
       write_dockerfile(workspace_dir, template_dir, assigns)
       desired_dockerignore_entries = determine_desired_dockerignore_entries()
       write_dockerignore(workspace_dir, desired_dockerignore_entries)
@@ -80,10 +90,13 @@ defmodule GenerateDockerfile.Generator do
   end
 
   defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version) do
-    {:ok, _} = AppConfig.start_link(
-      workspace_dir: workspace_dir,
-      default_erlang_version: default_erlang_version,
-      default_elixir_version: default_elixir_version)
+    {:ok, _} =
+      AppConfig.start_link(
+        workspace_dir: workspace_dir,
+        default_erlang_version: default_erlang_version,
+        default_elixir_version: default_elixir_version
+      )
+
     case AppConfig.status() do
       {:error, msg} -> GenerateDockerfile.error(msg)
       :ok -> nil
@@ -91,22 +104,25 @@ defmodule GenerateDockerfile.Generator do
   end
 
   defp build_assigns(
-      prebuilt_erlang_versions,
-      prebuilt_erlang_image_base,
-      prebuilt_erlang_image_tag,
-      debian_image,
-      asdf_image,
-      builder_image) do
-    timestamp = DateTime.utc_now |> DateTime.to_iso8601
+         prebuilt_erlang_versions,
+         prebuilt_erlang_image_base,
+         prebuilt_erlang_image_tag,
+         debian_image,
+         asdf_image,
+         builder_image
+       ) do
+    timestamp = DateTime.utc_now() |> DateTime.to_iso8601()
     packages = AppConfig.get!(:install_packages) |> Enum.join(" ")
     erlang_version = AppConfig.get!(:erlang_version)
     elixir_version = AppConfig.get!(:elixir_version)
+
     prebuilt_erlang_image =
       if Enum.member?(prebuilt_erlang_versions, erlang_version) do
         "#{prebuilt_erlang_image_base}#{erlang_version}:#{prebuilt_erlang_image_tag}"
       else
         nil
       end
+
     [
       debian_image: debian_image,
       asdf_image: asdf_image,
@@ -138,21 +154,24 @@ defmodule GenerateDockerfile.Generator do
       else
         "Dockerfile-release.eex"
       end
+
     template_path = Path.join(template_dir, template_name)
     dockerfile = EEx.eval_file(template_path, [assigns: assigns], trim: true)
     write_path = Path.join(workspace_dir, "Dockerfile")
+
     if File.exists?(write_path) do
       GenerateDockerfile.error("Unable to generate Dockerfile because one already exists.")
     end
+
     File.write!(write_path, dockerfile)
     Logger.info("Generated Dockerfile.")
   end
 
   defp escape_quoted(str) do
     str
-      |> String.replace("\\", "\\\\")
-      |> String.replace("\"", "\\\"")
-      |> String.replace("\n", "\\n")
+    |> String.replace("\\", "\\\\")
+    |> String.replace("\"", "\\\"")
+    |> String.replace("\n", "\\n")
   end
 
   defp render_env(map) do
@@ -168,37 +187,42 @@ defmodule GenerateDockerfile.Generator do
 
   defp render_commands(cmds) do
     cmds
-      |> Enum.map(fn cmd -> "RUN #{cmd}" end)
-      |> Enum.join("\n")
+    |> Enum.map(fn cmd -> "RUN #{cmd}" end)
+    |> Enum.join("\n")
   end
 
   defp determine_desired_dockerignore_entries() do
     brunch_dir = AppConfig.get!(:brunch_dir)
+
     brunch_entries =
       case brunch_dir do
         nil -> []
         "." -> @brunch_dockerignore
-        brunch_dir -> Enum.map(@brunch_dockerignore, &(Path.join(brunch_dir, &1)))
+        brunch_dir -> Enum.map(@brunch_dockerignore, &Path.join(brunch_dir, &1))
       end
+
     phoenix_entries = if brunch_dir == nil, do: [], else: @phoenix_dockerignore
-    [AppConfig.get!(:app_yaml_path) | @common_dockerignore] ++
-      brunch_entries ++ phoenix_entries
+    [AppConfig.get!(:app_yaml_path) | @common_dockerignore] ++ brunch_entries ++ phoenix_entries
   end
 
   defp write_dockerignore(workspace_dir, desired_entries) do
     write_path = Path.join(workspace_dir, ".dockerignore")
-    existing_entries = if File.exists?(write_path) do
-      write_path
-        |> File.read!
+
+    existing_entries =
+      if File.exists?(write_path) do
+        write_path
+        |> File.read!()
         |> String.split("\n", trim: true)
-    else
-      []
-    end
-    File.open!(write_path, [:append], fn (io) ->
-      Enum.each(desired_entries -- existing_entries, fn (entry) ->
+      else
+        []
+      end
+
+    File.open!(write_path, [:append], fn io ->
+      Enum.each(desired_entries -- existing_entries, fn entry ->
         IO.puts(io, entry)
       end)
     end)
+
     if length(existing_entries) == 0 do
       Logger.info("Generated .dockerignore file.")
     else

@@ -20,66 +20,88 @@ defmodule SampleAppBuildTest do
 
   test "Minimal plug app" do
     config = """
-      env: flex
-      runtime: elixir
-      """
+    env: flex
+    runtime: elixir
+    """
+
     run_app_test("minimal_plug", config)
   end
 
   test "Minimal phoenix app" do
     config = """
-      env: flex
-      runtime: elixir
-      """
-    run_app_test("minimal_phoenix", config,
+    env: flex
+    runtime: elixir
+    """
+
+    run_app_test(
+      "minimal_phoenix",
+      config,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
-          show: true)
+          show: true
+        )
+
         assert_cmd_output(
-          ["docker", "run", "--rm", image, "elixir", "--version"], ~r{1\.5\.1}, show: true)
-      end)
+          ["docker", "run", "--rm", image, "elixir", "--version"],
+          ~r{1\.5\.1},
+          show: true
+        )
+      end
+    )
   end
 
   test "Minimal phoenix app with release" do
     config = """
-      env: flex
-      runtime: elixir
-      runtime_config:
-        release_app: minimal_phoenix
-      """
-    run_app_test("minimal_phoenix", config,
+    env: flex
+    runtime: elixir
+    runtime_config:
+      release_app: minimal_phoenix
+    """
+
+    run_app_test(
+      "minimal_phoenix",
+      config,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix"],
-          show: true)
+          show: true
+        )
       end,
       check_container: fn _container ->
-        assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.5.1", timeout: 10, show: true, verbose: true)
-      end)
+        assert_cmd_output(
+          ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
+          "1.5.1",
+          timeout: 10,
+          show: true,
+          verbose: true
+        )
+      end
+    )
   end
 
   test "Minimal phoenix app in staging environment" do
     config = """
-      env: flex
-      runtime: elixir
-      env_variables:
-        MIX_ENV: staging
-      entrypoint: MIX_ENV=staging mix phx.server
-      """
+    env: flex
+    runtime: elixir
+    env_variables:
+      MIX_ENV: staging
+    entrypoint: MIX_ENV=staging mix phx.server
+    """
+
     run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
   end
 
   test "Minimal phoenix app with release in staging environment" do
     config = """
-      env: flex
-      runtime: elixir
-      runtime_config:
-        release_app: minimal_phoenix
-      env_variables:
-        MIX_ENV: staging
-      """
+    env: flex
+    runtime: elixir
+    runtime_config:
+      release_app: minimal_phoenix
+    env_variables:
+      MIX_ENV: staging
+    """
+
     run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
   end
 
@@ -92,29 +114,48 @@ defmodule SampleAppBuildTest do
     expected_output = Keyword.get(opts, :expected_output, ~r{Hello, world!})
 
     File.rm_rf!(@tmp_dir)
+
     @apps_dir
     |> Path.join(app_name)
     |> File.cp_r!(@tmp_dir)
+
     @tmp_dir
     |> Path.join("app.yaml")
     |> File.write!(config)
 
     assert_cmd_succeeds(
-      ["docker", "run","--rm",
-        "-v", "#{@tmp_dir}:/workspace", "-w", "/workspace",
-        "elixir-generate-dockerfile"], show: true, verbose: true)
+      [
+        "docker",
+        "run",
+        "--rm",
+        "-v",
+        "#{@tmp_dir}:/workspace",
+        "-w",
+        "/workspace",
+        "elixir-generate-dockerfile"
+      ],
+      show: true,
+      verbose: true
+    )
 
     File.cd!(@tmp_dir, fn ->
       build_docker_image(fn image ->
         if check_image != nil do
           check_image.(image)
         end
+
         run_docker_daemon(["-p", "8080:8080", image], fn container ->
           if check_container != nil do
             check_container.(container)
           end
-          assert_cmd_output(["curl", "-s", "-S", "http://localhost:8080"],
-            expected_output, timeout: 10, show: true, verbose: true)
+
+          assert_cmd_output(
+            ["curl", "-s", "-S", "http://localhost:8080"],
+            expected_output,
+            timeout: 10,
+            show: true,
+            verbose: true
+          )
         end)
       end)
     end)
