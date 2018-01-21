@@ -16,8 +16,8 @@ defmodule ImageStructureTest do
   use ExUnit.Case
   import TestHelper
 
-  structure_tests "elixir-debian/structure-test.json", "elixir-debian"
-  structure_tests "elixir-asdf/structure-test.json", "elixir-asdf"
-  structure_tests "elixir-base/structure-test.json", "elixir-base"
-  structure_tests "elixir-builder/structure-test.json", "elixir-builder"
+  structure_tests("elixir-debian/structure-test.json", "elixir-debian")
+  structure_tests("elixir-asdf/structure-test.json", "elixir-asdf")
+  structure_tests("elixir-base/structure-test.json", "elixir-base")
+  structure_tests("elixir-builder/structure-test.json", "elixir-builder")
 end

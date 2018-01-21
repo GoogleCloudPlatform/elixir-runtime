@@ -16,24 +16,31 @@ defmodule GenerateDockerfile do
   require Logger
 
   def main(args) do
-    {opts, leftover, unknown} = OptionParser.parse(args, switches: [
-      workspace_dir: :string,
-      debian_image: :string,
-      asdf_image: :string,
-      builder_image: :string,
-      prebuilt_erlang_image_base: :string,
-      prebuilt_erlang_image_tag: :string,
-      prebuilt_erlang_versions: :string,
-      default_erlang_version: :string,
-      default_elixir_version: :string,
-      template_dir: :string
-    ])
+    {opts, leftover, unknown} =
+      OptionParser.parse(
+        args,
+        switches: [
+          workspace_dir: :string,
+          debian_image: :string,
+          asdf_image: :string,
+          builder_image: :string,
+          prebuilt_erlang_image_base: :string,
+          prebuilt_erlang_image_tag: :string,
+          prebuilt_erlang_versions: :string,
+          default_erlang_version: :string,
+          default_elixir_version: :string,
+          template_dir: :string
+        ]
+      )
+
     if length(leftover) > 0 do
       error("Unprocessed args: #{inspect(leftover)}")
     end
+
     if length(unknown) > 0 do
       error("Unrecognized switches: #{inspect(unknown)}")
     end
+
     GenerateDockerfile.Generator.execute(opts)
     Logger.flush()
   end
