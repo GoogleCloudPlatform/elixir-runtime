@@ -127,7 +127,7 @@ echo
 
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
   gcloud container builds submit $DIRNAME/elixir-prebuilt-erlang \
-    --config $DIRNAME/elixir-prebuilt-erlang/cloudbuild.yaml --project $PROJECT \
+    --config $DIRNAME/elixir-prebuilt-erlang/cloudbuild.yaml --project $PROJECT --timeout 30m \
     --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ASDF_TAG=$ASDF_IMAGE_TAG,_ERLANG_VERSION=$version
   echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG"
   if [ "$STAGING_FLAG" = "true" ]; then

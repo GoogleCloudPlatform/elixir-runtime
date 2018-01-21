@@ -18,6 +18,10 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2018-01-20-210216
+
+* Prebuilt patch releases of OTP 20. Update default OTP to 20.2.2.
+
 ## elixir-2018-01-17-121145
 
 * Support for building releases in an environment other than `prod`.
