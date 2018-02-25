@@ -3,10 +3,38 @@
 [![Travis-CI Build Status](https://travis-ci.org/GoogleCloudPlatform/elixir-runtime.svg)](https://travis-ci.org/GoogleCloudPlatform/elixir-runtime/)
 
 This repository contains the source for the Elixir Runtime for the
-[Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/),
-[Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine),
-and other Docker-based hosting environments.
-It is not covered by any SLA or deprecation policy. It may change at any time.
+[Google App Engine Flexible Environment](https://cloud.google.com/appengine/docs/flexible/).
+It can also be used to run Elixir applications in
+[Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine) and
+other Docker-based hosting environments.
+
+This runtime is maintained by Google, but is experimental and not covered by
+any SLA or deprecation policy. It may change at any time.
+
+## Elixir on Google App Engine
+
+[Google App Engine](https://cloud.google.com/appengine/) is a
+platform-as-a-service offering on Google Cloud Platform. It is an easy way to
+build scalable web and mobile backends in any language on Google's
+infrastructure.
+
+You may consider deploying your Elixir application to Google App Engine if:
+
+*   Your application is an HTTP web or mobile backend using an Elixir-based
+    framework such as [Phoenix](https://phoenixframework.org).
+*   You want to focus on application development, and allow Google's
+    infrastructure and operations teams to handle your operations needs such as
+    monitoring, scaling, and upgrades.
+
+You should consider a different hosting solution such as, e.g.,
+[Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) if:
+
+*   Your application uses websockets, as this feature is not yet supported by
+    Google App Engine.
+*   Your application uses Erlang's hot upgrade feature because it stores
+    critical state in long-running processes. App Engine is designed for
+    "stateless" apps that use a separate store such as a database for long-term
+    state.
 
 ## Using the Elixir Runtime
 
@@ -131,7 +159,7 @@ corresponding clause for the environment in your `rel/config.exs` file.)
 
 The Elixir Runtime uses the [asdf](https://github.com/asdf-vm/asdf) tool to
 install and manage Erlang and Elixir. By default, it will run your application
-on recent stable releases of the language. However, you may specify which
+on recent stable releases of those languages. However, you may specify which
 versions to use by providing a `.tool-versions` file with versions for `erlang`
 and `elixir`. See the [asdf](https://github.com/asdf-vm/asdf) documentation for
 more information on the format of the `.tool-versions` file.
@@ -218,11 +246,11 @@ The Elixir Runtime comprises three parts:
         dependencies for the Erlang VM, and some common configuration for
         App Engine runtimes. However, it does not include an installation of
         Erlang or Elixir itself. This image is used as a runtime base image for
-        release-based applications. The release, with its embedded ERTS, is
-        simply installed directly atop this image.
+        release-based applications. An application release, with its embedded
+        ERTS, is installed directly atop this image.
     *   `elixir-asdf` extends `elixir-debian` by installing
         [asdf](https://github.com/asdf-vm/asdf) and the erlang and elixir
-        plugins, but does not actually include any installations. This image is
+        plugins, but does not include any actual installations. This image is
         used as a base image for most other images.
     *   `elixir-base` extends `elixir-asdf` by installing a default recent
         version of both Erlang and Elixir. It may be used as a convenient
