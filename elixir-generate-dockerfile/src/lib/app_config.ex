@@ -130,7 +130,7 @@ defmodule GenerateDockerfile.AppConfig do
     project_id = System.get_env("PROJECT_ID")
 
     if project_id == nil do
-      if System.get_env("CI") == "true" && System.get_env("TRAVIS") == "true" do
+      if System.get_env("DISABLE_GCP_METADATA_FOR_UNIT_TESTS") == "true" do
         nil
       else
         MetadataFetcher.get_project_id()

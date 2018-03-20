@@ -4,7 +4,7 @@
     {
       "name": "test_elixir_installation",
       "command": ["elixir", "--version"],
-      "expectedOutput": ["Elixir [0-9]+\\.[0-9]+\\.[0-9]+\n"]
+      "expectedOutput": ["Elixir [0-9]+\\.[0-9]+\\.[0-9]+"]
     },
     {
       "name": "test_run_elixir",

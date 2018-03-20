@@ -37,17 +37,3 @@ defmodule ElixirRuntime.Mixfile do
     ]
   end
 end
-
-defmodule Mix.Tasks.Hello do
-  @moduledoc """
-  Run tests.
-  """
-
-  @shortdoc "Run tests."
-
-  use Mix.Task
-
-  def run(_args) do
-    IO.puts("Running tests")
-  end
-end
