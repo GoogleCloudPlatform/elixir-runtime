@@ -147,7 +147,7 @@ defmodule GenerateDockerfile.AppConfig do
       throw({:usage_error, "Unable to find required `#{app_yaml_path}` file."})
     end
 
-    YamlElixir.read_from_file(app_config_path)
+    YamlElixir.read_from_file!(app_config_path)
   end
 
   defp analyze_deps(workspace_dir) do

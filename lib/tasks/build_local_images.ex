@@ -20,8 +20,8 @@ defmodule Mix.Tasks.BuildLocalImages do
   @shortdoc "Build images locally."
 
   @prebuilt_erlang_image_base "elixir-prebuilt-erlang-"
-  @prebuilt_erlang_versions ["20.3.1"]
-  @base_erlang_version "20.3.1"
+  @prebuilt_erlang_versions ["20.3.2"]
+  @base_erlang_version "20.3.2"
   @base_elixir_version "1.6.4-otp-20"
 
   use Mix.Task
