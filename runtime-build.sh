@@ -15,6 +15,13 @@
 # limitations under the License.
 
 
+DEFAULT_ERLANG_VERSION=20.3.6
+DEFAULT_ELIXIR_VERSION=1.6.5-otp-20
+ASDF_VERSION=0.5.0
+GCLOUD_VERSION=203.0.0
+NODEJS_VERSION=8.11.2
+
+
 set -e
 
 DIRNAME=$(dirname $0)
@@ -26,8 +33,6 @@ PREBUILT_ERLANG_VERSIONS=()
 if [ -f ${DIRNAME}/erlang-versions.txt ]; then
   mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
 fi
-DEFAULT_ERLANG_VERSION=20.3.2
-DEFAULT_ELIXIR_VERSION=1.6.4-otp-20
 BASE_IMAGE_DOCKERFILE=default
 STAGING_FLAG=
 UPLOAD_BUCKET=
@@ -158,7 +163,7 @@ fi
 
 gcloud container builds submit $DIRNAME/elixir-asdf \
   --config $DIRNAME/elixir-asdf/cloudbuild.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ASDF_VERSION=$ASDF_VERSION
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \
@@ -182,7 +187,7 @@ fi
 
 gcloud container builds submit $DIRNAME/elixir-builder \
   --config $DIRNAME/elixir-builder/cloudbuild.yaml --project $PROJECT \
-  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE
+  --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_NODEJS_VERSION=$NODEJS_VERSION,_GCLOUD_VERSION=$GCLOUD_VERSION
 echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG"
 if [ "$STAGING_FLAG" = "true" ]; then
   gcloud container images add-tag --project $PROJECT \

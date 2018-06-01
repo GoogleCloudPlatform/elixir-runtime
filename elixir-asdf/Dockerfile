@@ -19,7 +19,7 @@
 FROM elixir-debian
 
 ARG asdf_dir=/opt/asdf
-ARG asdf_version=0.4.3
+ARG asdf_version
 
 # Install prerequisites for building Erlang and Elixir
 ARG DEBIAN_FRONTEND=noninteractive

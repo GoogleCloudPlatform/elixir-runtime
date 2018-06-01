@@ -19,10 +19,14 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   @shortdoc "Build images locally."
 
+  @prebuilt_erlang_versions ["20.3.6"]
+  @base_erlang_version "20.3.6"
+  @base_elixir_version "1.6.5-otp-20"
+  @asdf_version "0.5.0"
+  @nodejs_version "8.11.2"
+  @gcloud_version "203.0.0"
+
   @prebuilt_erlang_image_base "elixir-prebuilt-erlang-"
-  @prebuilt_erlang_versions ["20.3.2"]
-  @base_erlang_version "20.3.2"
-  @base_elixir_version "1.6.4-otp-20"
 
   use Mix.Task
 
@@ -40,7 +44,14 @@ defmodule Mix.Tasks.BuildLocalImages do
       {_, 0} =
         System.cmd(
           "docker",
-          ["build", "--no-cache", "-t", "elixir-asdf", "."],
+          [
+            "build",
+            "--no-cache",
+            "-t",
+            "elixir-asdf",
+            "--build-arg",
+            "asdf_version=#{@asdf_version}",
+            "."],
           into: IO.stream(:stdio, :line)
         )
     end)
@@ -96,7 +107,17 @@ defmodule Mix.Tasks.BuildLocalImages do
       {_, 0} =
         System.cmd(
           "docker",
-          ["build", "--no-cache", "-t", "elixir-builder", "."],
+          [
+            "build",
+            "--no-cache",
+            "-t",
+            "elixir-builder",
+            "--build-arg",
+            "nodejs_version=#{@nodejs_version}",
+            "--build-arg",
+            "gcloud_version=#{@gcloud_version}",
+            "."
+          ],
           into: IO.stream(:stdio, :line)
         )
     end)

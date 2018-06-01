@@ -16,8 +16,6 @@ defmodule GenerateDockerfile.Generator do
   alias GenerateDockerfile.AppConfig
   require Logger
 
-  @default_erlang_version "20.2"
-  @default_elixir_version "1.5.3-otp-20"
   @default_workspace_dir "/workspace"
   @default_debian_image "gcr.io/gcp-elixir/runtime/debian"
   @default_asdf_image "gcr.io/gcp-elixir/runtime/asdf"
@@ -56,8 +54,8 @@ defmodule GenerateDockerfile.Generator do
       get_arg(opts, :prebuilt_erlang_image_tag, @default_prebuilt_erlang_image_tag)
 
     prebuilt_erlang_versions = get_arg(opts, :prebuilt_erlang_versions, "") |> String.split(",")
-    default_erlang_version = get_arg(opts, :default_erlang_version, @default_erlang_version)
-    default_elixir_version = get_arg(opts, :default_elixir_version, @default_elixir_version)
+    default_erlang_version = get_arg(opts, :default_erlang_version, "")
+    default_elixir_version = get_arg(opts, :default_elixir_version, "")
 
     template_dir =
       Keyword.get(opts, :template_dir, @default_template_dir)
@@ -89,6 +87,12 @@ defmodule GenerateDockerfile.Generator do
     if value == "", do: default, else: value
   end
 
+  defp start_app_config(_workspace_dir, "", _default_elixir_version) do
+    GenerateDockerfile.error("Missing default erlang version")
+  end
+  defp start_app_config(_workspace_dir, _default_erlang_version, "") do
+    GenerateDockerfile.error("Missing default elixir version")
+  end
   defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version) do
     {:ok, _} =
       AppConfig.start_link(

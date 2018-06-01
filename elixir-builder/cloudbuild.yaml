@@ -4,7 +4,10 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['tag', 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG', 'elixir-asdf']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/builder:$_TAG', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/builder:$_TAG',
+           '--build-arg', 'nodejs_version=$_NODEJS_VERSION',
+           '--build-arg', 'gcloud_version=$_GCLOUD_VERSION',
+           '.']
 
 images:
   - 'gcr.io/$PROJECT_ID/$_NAMESPACE/builder:$_TAG'

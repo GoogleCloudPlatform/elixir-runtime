@@ -4,7 +4,9 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['tag', 'gcr.io/$PROJECT_ID/$_NAMESPACE/debian:$_TAG', 'elixir-debian']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG', '.']
+    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG',
+           '--build-arg', 'asdf_version=$_ASDF_VERSION',
+           '.']
 
 images:
   - 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG'

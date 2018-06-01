@@ -352,11 +352,6 @@ the Erlang prebuilt images, or vice versa.
 
 ### Releases
 
-To run an official release, you must make sure you configure the list of
-prebuilt Erlang binaries:
-
-    cp erlang-versions-official.txt erlang-versions.txt
-
 Official releases of the Elixir Runtime are done in the `gcp-elixir` project
 and uploaded to the `elixir-runtime` storage bucket. If you have sufficient
 access, you can perform an official release as follows:
@@ -366,8 +361,12 @@ access, you can perform an official release as follows:
 
 To update the official prebuilt Erlang binaries, do this:
 
-    ./erlang-build.sh -p gcp-elixir -n runtime -s
-    ./erlang-release.sh -p gcp-elixir -n runtime
+    ./erlang-build.sh -p gcp-elixir -n runtime -s -e <versions-to-build>
+    ./erlang-release.sh -p gcp-elixir -n runtime -e <versions-to-release>
+
+Generally, you should provide versions explicitly, otherwise it will build or
+release ALL versions in the erlang-versions.txt file, which would take a very
+long time.
 
 ## Contributing changes
 
