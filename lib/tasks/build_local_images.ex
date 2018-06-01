@@ -19,6 +19,7 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   @shortdoc "Build images locally."
 
+  @os_name "ubuntu16"
   @prebuilt_erlang_versions ["20.3.6"]
   @base_erlang_version "20.3.6"
   @base_elixir_version "1.6.5-otp-20"
@@ -31,11 +32,11 @@ defmodule Mix.Tasks.BuildLocalImages do
   use Mix.Task
 
   def run(_args) do
-    File.cd!("elixir-debian", fn ->
+    File.cd!("elixir-#{@os_name}", fn ->
       {_, 0} =
         System.cmd(
           "docker",
-          ["build", "--no-cache", "--pull", "-t", "elixir-debian", "."],
+          ["build", "--no-cache", "--pull", "-t", "elixir-os", "."],
           into: IO.stream(:stdio, :line)
         )
     end)
@@ -79,7 +80,7 @@ defmodule Mix.Tasks.BuildLocalImages do
       {dockerfile, 0} =
         System.cmd("sed", [
           "-e",
-          "s|$PREBUILT_ERLANG_IMAGE|#{@prebuilt_erlang_image_base}#{@base_erlang_version}|g",
+          "s|@@PREBUILT_ERLANG_IMAGE@@|#{@prebuilt_erlang_image_base}#{@base_erlang_version}|g",
           "Dockerfile-prebuilt.in"
         ])
 
@@ -134,7 +135,7 @@ defmodule Mix.Tasks.BuildLocalImages do
             "-t",
             "elixir-generate-dockerfile",
             "--build-arg",
-            "debian_image=elixir-debian",
+            "os_image=elixir-os",
             "--build-arg",
             "asdf_image=elixir-asdf",
             "--build-arg",

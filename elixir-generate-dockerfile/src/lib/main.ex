@@ -21,7 +21,7 @@ defmodule GenerateDockerfile do
         args,
         switches: [
           workspace_dir: :string,
-          debian_image: :string,
+          os_image: :string,
           asdf_image: :string,
           builder_image: :string,
           prebuilt_erlang_image_base: :string,

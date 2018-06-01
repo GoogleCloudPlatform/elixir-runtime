@@ -26,7 +26,7 @@ cd /app
 ./generate_dockerfile \
     --template-dir=/app \
     --workspace-dir=${WORKSPACE_DIR} \
-    --debian-image=${ELIXIR_DEBIAN_IMAGE} \
+    --os-image=${ELIXIR_OS_IMAGE} \
     --asdf-image=${ELIXIR_ASDF_IMAGE} \
     --builder-image=${ELIXIR_BUILDER_IMAGE} \
     --prebuilt-erlang-image-base=${PREBUILT_ERLANG_IMAGE_BASE} \

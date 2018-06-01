@@ -17,10 +17,6 @@ defmodule GenerateDockerfile.Generator do
   require Logger
 
   @default_workspace_dir "/workspace"
-  @default_debian_image "gcr.io/gcp-elixir/runtime/debian"
-  @default_asdf_image "gcr.io/gcp-elixir/runtime/asdf"
-  @default_builder_image "gcr.io/gcp-elixir/runtime/builder"
-  @default_prebuilt_erlang_image_base "gcr.io/gcp-elixir/runtime/prebuilt/debian8/otp-"
   @default_prebuilt_erlang_image_tag "latest"
   @default_template_dir "../app"
   @common_dockerignore [
@@ -43,12 +39,12 @@ defmodule GenerateDockerfile.Generator do
 
   def execute(opts) do
     workspace_dir = get_arg(opts, :workspace_dir, @default_workspace_dir)
-    debian_image = get_arg(opts, :debian_image, @default_debian_image)
-    asdf_image = get_arg(opts, :asdf_image, @default_asdf_image)
-    builder_image = get_arg(opts, :builder_image, @default_builder_image)
+    os_image = get_arg(opts, :os_image, "")
+    asdf_image = get_arg(opts, :asdf_image, "")
+    builder_image = get_arg(opts, :builder_image, "")
 
     prebuilt_erlang_image_base =
-      get_arg(opts, :prebuilt_erlang_image_base, @default_prebuilt_erlang_image_base)
+      get_arg(opts, :prebuilt_erlang_image_base, "")
 
     prebuilt_erlang_image_tag =
       get_arg(opts, :prebuilt_erlang_image_tag, @default_prebuilt_erlang_image_tag)
@@ -69,7 +65,7 @@ defmodule GenerateDockerfile.Generator do
           prebuilt_erlang_versions,
           prebuilt_erlang_image_base,
           prebuilt_erlang_image_tag,
-          debian_image,
+          os_image,
           asdf_image,
           builder_image
         )
@@ -111,7 +107,7 @@ defmodule GenerateDockerfile.Generator do
          prebuilt_erlang_versions,
          prebuilt_erlang_image_base,
          prebuilt_erlang_image_tag,
-         debian_image,
+         os_image,
          asdf_image,
          builder_image
        ) do
@@ -128,7 +124,7 @@ defmodule GenerateDockerfile.Generator do
       end
 
     [
-      debian_image: debian_image,
+      os_image: os_image,
       asdf_image: asdf_image,
       builder_image: builder_image,
       timestamp: timestamp,

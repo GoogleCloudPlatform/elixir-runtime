@@ -1,14 +1,13 @@
 steps:
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['pull', 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG']
+    args: ['pull', '$_ASDF_BASE_IMAGE:$_TAG']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['tag', 'gcr.io/$PROJECT_ID/$_NAMESPACE/asdf:$_TAG', 'elixir-asdf']
+    args: ['tag', '$_ASDF_BASE_IMAGE:$_TAG', 'elixir-asdf']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG',
-           '--build-arg', 'prebuilt_erlang_image_base=gcr.io/$PROJECT_ID/$_NAMESPACE/prebuilt/debian8/otp-',
+    args: ['build', '-t', '$_IMAGE:$_TAG',
            '--build-arg', 'erlang_version=$_ERLANG_VERSION',
            '--build-arg', 'elixir_version=$_ELIXIR_VERSION',
            '.']
 
 images:
-  - 'gcr.io/$PROJECT_ID/$_NAMESPACE/base:$_TAG'
+  - '$_IMAGE:$_TAG'

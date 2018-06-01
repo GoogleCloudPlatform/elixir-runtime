@@ -19,9 +19,10 @@ set -e
 
 DIRNAME=$(dirname $0)
 
+OS_NAME=ubuntu16
 PROJECT=
-NAMESPACE="elixir"
-IMAGE_TAG="staging"
+NAMESPACE=elixir
+IMAGE_TAG=staging
 PREBUILT_ERLANG_VERSIONS=()
 if [ -f ${DIRNAME}/erlang-versions.txt ]; then
   mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
@@ -32,41 +33,45 @@ show_usage() {
   echo "Flags:" >&2
   echo '  -e <versions>: comma separated versions (defaults to erlang-versions.txt)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -t <tag>: the image tag to release (defaults to `staging`)' >&2
 }
 
 OPTIND=1
 while getopts ":e:n:p:t:h" opt; do
-  case $opt in
+  case ${opt} in
     e)
-      if [ "$OPTARG" = "none" ]; then
+      if [ "${OPTARG}" = "none" ]; then
         PREBUILT_ERLANG_VERSIONS=()
       else
-        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "${OPTARG}"
       fi
       ;;
     n)
-      NAMESPACE=$OPTARG
+      NAMESPACE=${OPTARG}
+      ;;
+    o)
+      OS_NAME=${OPTARG}
       ;;
     p)
-      PROJECT=$OPTARG
+      PROJECT=${OPTARG}
       ;;
     t)
-      IMAGE_TAG=$OPTARG
+      IMAGE_TAG=${OPTARG}
       ;;
     h)
       show_usage
       exit 0
       ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echo "Invalid option: -${OPTARG}" >&2
       echo >&2
       show_usage
       exit 1
       ;;
     :)
-      echo "Option $OPTARG requires a parameter" >&2
+      echo "Option ${OPTARG} requires a parameter" >&2
       echo >&2
       show_usage
       exit 1
@@ -80,14 +85,16 @@ if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
   exit 1
 fi
 
-if [ -z "$PROJECT" ]; then
+if [ -z "${PROJECT}" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "**** Using project from gcloud config: $PROJECT" >&2
+  echo "**** Using project from gcloud config: ${PROJECT}" >&2
 fi
 
+PREBUILT_IMAGE_PREFIX=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/prebuilt/otp-
+
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
-  gcloud container images add-tag --project $PROJECT \
-    gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG \
-    gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:latest -q
-  echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG as latest"
+  gcloud container images add-tag --project ${PROJECT} \
+    ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG} \
+    ${PREBUILT_IMAGE_PREFIX}${version}:latest -q
+  echo "**** Tagged image ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG} as latest"
 done

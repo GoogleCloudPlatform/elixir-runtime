@@ -24,5 +24,6 @@ RUN asdf update \
 
 FROM scratch
 ARG erlang_version
-COPY --from=builder /opt/asdf/installs/erlang/${erlang_version} \
-     /opt/asdf/installs/erlang/${erlang_version}
+ARG asdf_dir=/opt/asdf
+COPY --from=builder ${asdf_dir}/installs/erlang/${erlang_version} \
+     ${asdf_dir}/installs/erlang/${erlang_version}

@@ -16,7 +16,7 @@
 # Debian plus asdf for installing and managing ERTS and Elixir.
 # Does not include any actual installations of ERTS or Elixir.
 
-FROM elixir-debian
+FROM elixir-os
 
 ARG asdf_dir=/opt/asdf
 ARG asdf_version

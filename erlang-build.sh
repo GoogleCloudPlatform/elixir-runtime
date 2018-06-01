@@ -19,8 +19,9 @@ set -e
 
 DIRNAME=$(dirname $0)
 
+OS_NAME=ubuntu16
 PROJECT=
-NAMESPACE="elixir"
+NAMESPACE=elixir
 IMAGE_TAG=
 ASDF_IMAGE_TAG=staging
 PREBUILT_ERLANG_VERSIONS=()
@@ -36,6 +37,7 @@ show_usage() {
   echo '  -a <tag>: use this asdf image tag (defaults to `staging`)' >&2
   echo '  -e <versions>: comma separated versions (defaults to erlang-versions.txt)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -s: also tag new images as `staging`' >&2
   echo '  -t <tag>: set the new image tag (creates a new tag if not provided)' >&2
@@ -44,28 +46,31 @@ show_usage() {
 
 OPTIND=1
 while getopts ":a:e:n:p:st:yh" opt; do
-  case $opt in
+  case ${opt} in
     a)
-      ASDF_IMAGE_TAG=$OPTARG
+      ASDF_IMAGE_TAG=${OPTARG}
       ;;
     e)
-      if [ "$OPTARG" = "none" ]; then
+      if [ "${OPTARG}" = "none" ]; then
         PREBUILT_ERLANG_VERSIONS=()
       else
-        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "$OPTARG"
+        IFS=',' read -r -a PREBUILT_ERLANG_VERSIONS <<< "${OPTARG}"
       fi
       ;;
     n)
-      NAMESPACE=$OPTARG
+      NAMESPACE=${OPTARG}
+      ;;
+    o)
+      OS_NAME=${OPTARG}
       ;;
     p)
-      PROJECT=$OPTARG
+      PROJECT=${OPTARG}
       ;;
     s)
       STAGING_FLAG="true"
       ;;
     t)
-      IMAGE_TAG=$OPTARG
+      IMAGE_TAG=${OPTARG}
       ;;
     y)
       AUTO_YES="true"
@@ -75,7 +80,7 @@ while getopts ":a:e:n:p:st:yh" opt; do
       exit 0
       ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echo "Invalid option: -${OPTARG}" >&2
       echo >&2
       show_usage
       exit 1
@@ -95,30 +100,33 @@ if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
   exit 1
 fi
 
-if [ -z "$PROJECT" ]; then
+if [ -z "${PROJECT}" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "Using project from gcloud config: $PROJECT" >&2
+  echo "Using project from gcloud config: ${PROJECT}" >&2
 fi
-if [ -z "$IMAGE_TAG" ]; then
+if [ -z "${IMAGE_TAG}" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
-  echo "Creating new IMAGE_TAG: $IMAGE_TAG" >&2
+  echo "Creating new IMAGE_TAG: ${IMAGE_TAG}" >&2
 fi
 
+ASDF_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/asdf
+PREBUILT_IMAGE_PREFIX=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/prebuilt/otp-
+
 echo
-echo "Using gcr.io/$PROJECT/$NAMESPACE/asdf:$ASDF_IMAGE_TAG"
+echo "Using ${ASDF_BASE_IMAGE}:${ASDF_IMAGE_TAG}"
 echo "Building images:"
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
-  echo "  gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG"
+  echo "  ${PREBUILT_IMAGE_PREFIX}${version}:$IMAGE_TAG"
 done
-if [ "$STAGING_FLAG" = "true" ]; then
+if [ "${STAGING_FLAG}" = "true" ]; then
   echo "and tagging them as staging."
 else
   echo "but NOT tagging them as staging."
 fi
-if [ -z "$AUTO_YES" ]; then
+if [ -z "${AUTO_YES}" ]; then
   read -r -p "Ok to build? [Y/n] " response
   response=${response,,}  # tolower
-  if [[ "$response" =~ ^(no|n)$ ]]; then
+  if [[ "${response}" =~ ^(no|n)$ ]]; then
     echo "Aborting."
     exit 1
   fi
@@ -126,14 +134,14 @@ fi
 echo
 
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
-  gcloud container builds submit $DIRNAME/elixir-prebuilt-erlang \
-    --config $DIRNAME/elixir-prebuilt-erlang/cloudbuild.yaml --project $PROJECT --timeout 30m \
-    --substitutions _TAG=$IMAGE_TAG,_NAMESPACE=$NAMESPACE,_ASDF_TAG=$ASDF_IMAGE_TAG,_ERLANG_VERSION=$version
-  echo "**** Built image: gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG"
-  if [ "$STAGING_FLAG" = "true" ]; then
-    gcloud container images add-tag --project $PROJECT \
-      gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:$IMAGE_TAG \
-      gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:staging -q
-    echo "**** Tagged image as gcr.io/$PROJECT/$NAMESPACE/prebuilt/debian8/otp-${version}:staging"
+  gcloud container builds submit ${DIRNAME}/elixir-prebuilt-erlang \
+    --config ${DIRNAME}/elixir-prebuilt-erlang/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+    --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_PREBUILT_IMAGE_PREFIX=${PREBUILT_IMAGE_PREFIX},_ASDF_TAG=${ASDF_IMAGE_TAG},_ERLANG_VERSION=${version}
+  echo "**** Built image: ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG}"
+  if [ "${STAGING_FLAG}" = "true" ]; then
+    gcloud container images add-tag --project ${PROJECT} \
+      ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG} \
+      ${PREBUILT_IMAGE_PREFIX}${version}:staging -q
+    echo "**** Tagged image as ${PREBUILT_IMAGE_PREFIX}${version}:staging"
   fi
 done

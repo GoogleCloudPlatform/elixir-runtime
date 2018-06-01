@@ -24,7 +24,7 @@ ENV DEFAULT_ERLANG_VERSION=${erlang_version} \
     DEFAULT_ELIXIR_VERSION=${elixir_version}
 
 # Install Erlang from prebuilt image
-COPY --from=$PREBUILT_ERLANG_IMAGE \
+COPY --from=@@PREBUILT_ERLANG_IMAGE@@ \
      /opt/asdf/installs/erlang/${erlang_version} \
      /opt/asdf/installs/erlang/${erlang_version}
 

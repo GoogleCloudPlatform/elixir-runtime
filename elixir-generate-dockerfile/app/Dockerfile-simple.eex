@@ -22,7 +22,7 @@
 
 FROM <%= @builder_image %> AS app-build
 
-## If your build requires additional Debian packages, install them here.
+## If your build requires additional apt packages, install them here.
 <%= if @builder_packages == "" do %>
 # RUN apt-get update -y \
 #     && apt-get install -y -q package-name another-package-name \
@@ -134,7 +134,7 @@ RUN mix do deps.get, deps.compile, compile
 
 FROM <%= @asdf_image %>
 
-## If your application needs additional Debian packages at runtime, install
+## If your application needs additional apt packages at runtime, install
 ## them here.
 <%= if @runtime_packages == "" do %>
 # RUN apt-get update -y \

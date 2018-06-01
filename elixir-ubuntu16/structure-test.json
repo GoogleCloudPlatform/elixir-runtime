@@ -1,0 +1,15 @@
+{
+  "schemaVersion": "1.0.0",
+  "commandTests": [
+    {
+      "name": "test_locale",
+      "command": ["locale"],
+      "expectedOutput": ["LANG=en_US\\.UTF-8\n", "LC_CTYPE=\"en_US\\.UTF-8\"\n"]
+    },
+    {
+      "name": "test_mix_env_var",
+      "command": ["sh", "-c", "echo $MIX_ENV"],
+      "expectedOutput": ["prod\n"]
+    }
+  ]
+}

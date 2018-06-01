@@ -22,7 +22,7 @@
 
 FROM <%= @builder_image %> AS app-build
 
-## If your build requires additional Debian packages, install them here.
+## If your build requires additional apt packages, install them here.
 <%= if @builder_packages == "" do %>
 # RUN apt-get update -y \
 #     && apt-get install -y -q package-name another-package-name \
@@ -132,12 +132,12 @@ RUN mix release --env=<%= @mix_env %> --verbose
 
 ################################################################################
 ## 2. Application runtime image
-## From the debian image, installs the release built above, and sets the
+## From the OS base image, installs the release built above, and sets the
 ## entrypoint. This is the final image executed by Google App Engine.
 
-FROM <%= @debian_image %>
+FROM <%= @os_image %>
 
-## If your application needs additional Debian packages at runtime, install
+## If your application needs additional apt packages at runtime, install
 ## them here.
 <%= if @runtime_packages == "" do %>
 # RUN apt-get update -y \

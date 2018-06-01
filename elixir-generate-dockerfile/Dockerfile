@@ -26,7 +26,7 @@ RUN cd /src \
 # Use the Elixir base image again for the generator runtime.
 FROM elixir-base
 
-ARG debian_image
+ARG os_image
 ARG asdf_image
 ARG builder_image
 ARG prebuilt_erlang_image_base
@@ -41,7 +41,7 @@ COPY app/ /app/
 # Copy the built generate_dockerfile escript
 COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
 
-ENV ELIXIR_DEBIAN_IMAGE=${debian_image} \
+ENV ELIXIR_OS_IMAGE=${os_image} \
     ELIXIR_ASDF_IMAGE=${asdf_image} \
     ELIXIR_BUILDER_IMAGE=${builder_image} \
     PREBUILT_ERLANG_IMAGE_BASE=${prebuilt_erlang_image_base} \

@@ -19,9 +19,10 @@ set -e
 
 DIRNAME=$(dirname $0)
 
+OS_NAME=ubuntu16
 PROJECT=
-NAMESPACE="elixir"
-IMAGE_TAG="staging"
+NAMESPACE=elixir
+IMAGE_TAG=staging
 UPLOAD_BUCKET=
 
 show_usage() {
@@ -29,37 +30,41 @@ show_usage() {
   echo "Flags:" >&2
   echo '  -b <bucket>: promote the runtime definition in this gcs bucket (defaults to no promote)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -t <tag>: the image tag to release (defaults to `staging`)' >&2
 }
 
 OPTIND=1
 while getopts ":b:n:p:t:h" opt; do
-  case $opt in
+  case ${opt} in
     b)
-      UPLOAD_BUCKET=$OPTARG
+      UPLOAD_BUCKET=${OPTARG}
       ;;
     n)
-      NAMESPACE=$OPTARG
+      NAMESPACE=${OPTARG}
+      ;;
+    o)
+      OS_NAME=${OPTARG}
       ;;
     p)
-      PROJECT=$OPTARG
+      PROJECT=${OPTARG}
       ;;
     t)
-      IMAGE_TAG=$OPTARG
+      IMAGE_TAG=${OPTARG}
       ;;
     h)
       show_usage
       exit 0
       ;;
     \?)
-      echo "Invalid option: -$OPTARG" >&2
+      echo "Invalid option: -${OPTARG}" >&2
       echo >&2
       show_usage
       exit 1
       ;;
     :)
-      echo "Option $OPTARG requires a parameter" >&2
+      echo "Option ${OPTARG} requires a parameter" >&2
       echo >&2
       show_usage
       exit 1
@@ -68,33 +73,34 @@ while getopts ":b:n:p:t:h" opt; do
 done
 shift $((OPTIND-1))
 
-if [ -z "$PROJECT" ]; then
+if [ -z "${PROJECT}" ]; then
   PROJECT=$(gcloud config get-value project)
-  echo "**** Using project from gcloud config: $PROJECT" >&2
+  echo "**** Using project from gcloud config: ${PROJECT}" >&2
 fi
 
-gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/debian:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/debian:$IMAGE_TAG as latest"
-gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/asdf:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/asdf:$IMAGE_TAG as latest"
-gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/base:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/base:$IMAGE_TAG as latest"
-gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/builder:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/builder:$IMAGE_TAG as latest"
-gcloud container images add-tag --project $PROJECT \
-  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG \
-  gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:latest -q
-echo "**** Tagged image gcr.io/$PROJECT/$NAMESPACE/generate-dockerfile:$IMAGE_TAG as latest"
+OS_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}
+ASDF_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/asdf
+ELIXIR_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/base
+BUILDER_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/builder
+GENERATE_DOCKERFILE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/generate-dockerfile
 
-if [ -n "$UPLOAD_BUCKET" ]; then
-  gsutil cp gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml gs://$UPLOAD_BUCKET/elixir.yaml
-  echo "**** Promoted runtime config gs://$UPLOAD_BUCKET/elixir-$IMAGE_TAG.yaml to gs://$UPLOAD_BUCKET/elixir.yaml"
+gcloud container images add-tag --project ${PROJECT} \
+  ${OS_BASE_IMAGE}:$IMAGE_TAG ${OS_BASE_IMAGE}:latest -q
+echo "**** Tagged image ${OS_BASE_IMAGE}:${IMAGE_TAG} as latest"
+gcloud container images add-tag --project ${PROJECT} \
+  ${ASDF_BASE_IMAGE}:$IMAGE_TAG ${ASDF_BASE_IMAGE}:latest -q
+echo "**** Tagged image ${ASDF_BASE_IMAGE}:${IMAGE_TAG} as latest"
+gcloud container images add-tag --project ${PROJECT} \
+  ${ELIXIR_BASE_IMAGE}:$IMAGE_TAG ${ELIXIR_BASE_IMAGE}:latest -q
+echo "**** Tagged image ${ELIXIR_BASE_IMAGE}:${IMAGE_TAG} as latest"
+gcloud container images add-tag --project ${PROJECT} \
+  ${BUILDER_IMAGE}:$IMAGE_TAG ${BUILDER_IMAGE}:latest -q
+echo "**** Tagged image ${BUILDER_IMAGE}:${IMAGE_TAG} as latest"
+gcloud container images add-tag --project ${PROJECT} \
+  ${GENERATE_DOCKERFILE_IMAGE}:$IMAGE_TAG ${GENERATE_DOCKERFILE_IMAGE}:latest -q
+echo "**** Tagged image ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG} as latest"
+
+if [ -n "${UPLOAD_BUCKET}" ]; then
+  gsutil cp gs://${UPLOAD_BUCKET}/elixir-$IMAG{E_TAG.yaml gs://${UPLOAD_BUCKET}/elixir.yaml
+  echo "**** Promoted runtime config gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml to gs://${UPLOAD_BUCKET}/elixir.yaml"
 fi
