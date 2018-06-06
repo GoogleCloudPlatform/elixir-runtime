@@ -15,7 +15,7 @@
 # limitations under the License.
 
 
-DEFAULT_ERLANG_VERSION=20.3.6
+DEFAULT_ERLANG_VERSION=20.3.7
 DEFAULT_ELIXIR_VERSION=1.6.5-otp-20
 ASDF_VERSION=0.5.0
 GCLOUD_VERSION=203.0.0
@@ -131,7 +131,6 @@ echo "  ${ASDF_BASE_IMAGE}:${IMAGE_TAG}"
 echo "  ${ELIXIR_BASE_IMAGE}:${IMAGE_TAG}"
 echo "  ${BUILDER_IMAGE}:${IMAGE_TAG}"
 echo "  ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG}"
-echo "  ${PREBUILT_IMAGE_PREFIX}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
   echo "and tagging them as staging."
 else
@@ -186,7 +185,7 @@ fi
 sed -e "s|@@PREBUILT_ERLANG_IMAGE@@|${PREBUILT_IMAGE_PREFIX}${DEFAULT_ERLANG_VERSION}:latest|g" \
   < ${DIRNAME}/elixir-base/Dockerfile-${BASE_IMAGE_DOCKERFILE}.in > ${DIRNAME}/elixir-base/Dockerfile
 gcloud container builds submit ${DIRNAME}/elixir-base \
-  --config ${DIRNAME}/elixir-base/cloudbuild.yaml --project ${PROJECT} \
+  --config ${DIRNAME}/elixir-base/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${ELIXIR_BASE_IMAGE},_ERLANG_VERSION=${DEFAULT_ERLANG_VERSION},_ELIXIR_VERSION=${DEFAULT_ELIXIR_VERSION}
 echo "**** Built image: ${ELIXIR_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
