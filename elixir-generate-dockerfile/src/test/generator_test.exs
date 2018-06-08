@@ -299,17 +299,28 @@ defmodule GeneratorTest do
       |> File.write!(config)
     end
 
-    Generator.execute(
+    opts = [
       workspace_dir: @tmp_dir,
       template_dir: @template_dir,
       os_image: "gcr.io/gcp-elixir/runtime/ubuntu16",
       asdf_image: "gcr.io/gcp-elixir/runtime/ubuntu16/asdf",
       builder_image: "gcr.io/gcp-elixir/runtime/ubuntu16/builder",
-      prebuilt_erlang_image_base: "gcr.io/gcp-elixir/runtime/ubuntu16/prebuilt/otp-",
-      prebuilt_erlang_versions: prebuilt_erlang_versions,
       default_erlang_version: "20.2",
       default_elixir_version: "1.5.3-otp-20"
-    )
+    ]
+    opts =
+      if prebuilt_erlang_versions == "" do
+        opts
+      else
+        prebuilt_erlang_versions
+        |> String.split(",")
+        |> Enum.reduce(opts, fn v, o ->
+          image = "#{v}=gcr.io/gcp-elixir/runtime/ubuntu16/prebuilt/otp-#{v}:latest"
+          [{:prebuilt_erlang_images, image} | o]
+        end)
+      end
+
+    Generator.execute(opts)
   end
 
   defp assert_file_contents(path, expectations) do

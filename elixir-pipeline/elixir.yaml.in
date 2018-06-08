@@ -1,5 +1,11 @@
 steps:
   - name: '@@GENERATE_DOCKERFILE_IMAGE@@:@@TAG@@'
+    args: [@@PREBUILT_IMAGE_ARGS@@
+           '--os-image', '@@OS_BASE_IMAGE@@:@@TAG@@',
+           '--asdf-image', '@@ASDF_BASE_IMAGE@@:@@TAG@@',
+           '--builder-image', '@@BUILDER_IMAGE@@:@@TAG@@',
+           '--default-erlang-version', '@@DEFAULT_ERLANG_VERSION@@',
+           '--default-elixir-version', '@@DEFAULT_ELIXIR_VERSION@@']
   - name: 'gcr.io/cloud-builders/docker:latest'
     args: ['build', '--network=cloudbuild', '-t', '$_OUTPUT_IMAGE', '.']
 images:

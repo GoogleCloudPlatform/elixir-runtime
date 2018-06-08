@@ -4,16 +4,7 @@ steps:
   - name: 'gcr.io/cloud-builders/docker'
     args: ['tag', '$_ELIXIR_BASE_IMAGE:$_TAG', 'elixir-base']
   - name: 'gcr.io/cloud-builders/docker'
-    args: ['build', '-t', '$_IMAGE:$_TAG',
-           '--build-arg', 'os_image=$_OS_BASE_IMAGE:$_TAG',
-           '--build-arg', 'asdf_image=$_ASDF_BASE_IMAGE:$_TAG',
-           '--build-arg', 'builder_image=$_BUILDER_IMAGE:$_TAG',
-           '--build-arg', 'prebuilt_erlang_image_base=$_PREBUILT_IMAGE_PREFIX',
-           '--build-arg', 'prebuilt_erlang_image_tag=latest',
-           '--build-arg', 'prebuilt_erlang_versions=$_PREBUILT_ERLANG_VERSIONS',
-           '--build-arg', 'default_erlang_version=$_DEFAULT_ERLANG_VERSION',
-           '--build-arg', 'default_elixir_version=$_DEFAULT_ELIXIR_VERSION',
-           '.']
+    args: ['build', '-t', '$_IMAGE:$_TAG', '.']
 
 images:
   - '$_IMAGE:$_TAG'

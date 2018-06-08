@@ -23,15 +23,4 @@ test "${HOME}" = "/root" || cp /root/.tool-versions ${HOME}/
 
 WORKSPACE_DIR=$(/bin/pwd)
 cd /app
-./generate_dockerfile \
-    --template-dir=/app \
-    --workspace-dir=${WORKSPACE_DIR} \
-    --os-image=${ELIXIR_OS_IMAGE} \
-    --asdf-image=${ELIXIR_ASDF_IMAGE} \
-    --builder-image=${ELIXIR_BUILDER_IMAGE} \
-    --prebuilt-erlang-image-base=${PREBUILT_ERLANG_IMAGE_BASE} \
-    --prebuilt-erlang-image-tag=${PREBUILT_ERLANG_IMAGE_TAG} \
-    --prebuilt-erlang-versions=${PREBUILT_ERLANG_VERSIONS} \
-    --default-erlang-version=${DEFAULT_ERLANG_VERSION} \
-    --default-elixir-version=${DEFAULT_ELIXIR_VERSION} \
-    "$@"
+./generate_dockerfile --template-dir=/app --workspace-dir=${WORKSPACE_DIR} "$@"

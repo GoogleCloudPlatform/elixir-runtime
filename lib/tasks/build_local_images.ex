@@ -25,13 +25,23 @@ defmodule Mix.Tasks.BuildLocalImages do
   @base_elixir_version "1.6.5-otp-20"
   @asdf_version "0.5.0"
   @nodejs_version "8.11.2"
-  @gcloud_version "203.0.0"
+  @gcloud_version "204.0.0"
 
-  @prebuilt_erlang_image_base "elixir-prebuilt-erlang-"
+  @prebuilt_erlang_image_prefix "elixir-prebuilt-erlang-"
 
   use Mix.Task
 
-  def run(_args) do
+  def run(args) do
+    {opts, _leftover, _unknown} =
+      OptionParser.parse(
+        args,
+        strict: [
+          prebuilt_images_tag: :string
+        ],
+        aliases: [i: :prebuilt_images_tag]
+      )
+    prebuilt_images_tag = Keyword.get(opts, :prebuilt_images_tag, nil)
+
     File.cd!("elixir-#{@os_name}", fn ->
       {_, 0} =
         System.cmd(
@@ -57,30 +67,54 @@ defmodule Mix.Tasks.BuildLocalImages do
         )
     end)
 
-    File.cd!("elixir-prebuilt-erlang", fn ->
+    if prebuilt_images_tag == nil do
+      File.cd!("elixir-prebuilt-erlang", fn ->
+        Enum.each(@prebuilt_erlang_versions, fn version ->
+          {_, 0} =
+            System.cmd(
+              "docker",
+              [
+                "build",
+                "--no-cache",
+                "-t",
+                "#{@prebuilt_erlang_image_prefix}#{version}",
+                "--build-arg",
+                "erlang_version=#{version}",
+                "."
+              ],
+              into: IO.stream(:stdio, :line)
+            )
+        end)
+      end)
+    else
       Enum.each(@prebuilt_erlang_versions, fn version ->
         {_, 0} =
           System.cmd(
             "docker",
             [
-              "build",
-              "--no-cache",
-              "-t",
-              "#{@prebuilt_erlang_image_base}#{version}",
-              "--build-arg",
-              "erlang_version=#{version}",
-              "."
+              "pull",
+              "gcr.io/gcp-elixir/runtime/#{@os_name}/prebuilt/otp-#{version}:#{prebuilt_images_tag}"
+            ],
+            into: IO.stream(:stdio, :line)
+          )
+        {_, 0} =
+          System.cmd(
+            "docker",
+            [
+              "tag",
+              "gcr.io/gcp-elixir/runtime/#{@os_name}/prebuilt/otp-#{version}:#{prebuilt_images_tag}",
+              "#{@prebuilt_erlang_image_prefix}#{version}"
             ],
             into: IO.stream(:stdio, :line)
           )
       end)
-    end)
+    end
 
     File.cd!("elixir-base", fn ->
       {dockerfile, 0} =
         System.cmd("sed", [
           "-e",
-          "s|@@PREBUILT_ERLANG_IMAGE@@|#{@prebuilt_erlang_image_base}#{@base_erlang_version}|g",
+          "s|@@PREBUILT_ERLANG_IMAGE@@|#{@prebuilt_erlang_image_prefix}#{@base_erlang_version}|g",
           "Dockerfile-prebuilt.in"
         ])
 
@@ -124,7 +158,12 @@ defmodule Mix.Tasks.BuildLocalImages do
     end)
 
     File.cd!("elixir-generate-dockerfile", fn ->
-      prebuilt_erlang_versions_str = Enum.join(@prebuilt_erlang_versions, ",")
+      prebuilt_erlang_images_str =
+        @prebuilt_erlang_versions
+        |> Enum.map(fn version ->
+          "#{version}=#{@prebuilt_erlang_image_prefix}#{version}"
+        end)
+        |> Enum.join(",")
 
       {_, 0} =
         System.cmd(
@@ -141,11 +180,7 @@ defmodule Mix.Tasks.BuildLocalImages do
             "--build-arg",
             "builder_image=elixir-builder",
             "--build-arg",
-            "prebuilt_erlang_image_base=#{@prebuilt_erlang_image_base}",
-            "--build-arg",
-            "prebuilt_erlang_image_tag=latest",
-            "--build-arg",
-            "prebuilt_erlang_versions=#{prebuilt_erlang_versions_str}",
+            "prebuilt_erlang_images=#{prebuilt_erlang_images_str}",
             "--build-arg",
             "default_erlang_version=#{@base_erlang_version}",
             "--build-arg",

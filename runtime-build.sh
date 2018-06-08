@@ -34,6 +34,7 @@ BASE_IMAGE_DOCKERFILE=default
 STAGING_FLAG=
 UPLOAD_BUCKET=
 AUTO_YES=
+PREBUILT_IMAGE_TAG=latest
 PREBUILT_ERLANG_VERSIONS=()
 if [ -f ${DIRNAME}/erlang-versions.txt ]; then
   mapfile -t PREBUILT_ERLANG_VERSIONS < ${DIRNAME}/erlang-versions.txt
@@ -115,7 +116,6 @@ if [ -z "${IMAGE_TAG}" ]; then
   IMAGE_TAG=$(date +%Y-%m-%d-%H%M%S)
   echo "Creating new IMAGE_TAG: ${IMAGE_TAG}" >&2
 fi
-COMMA_ERLANG_VERSIONS=$( IFS=, ; echo "${PREBUILT_ERLANG_VERSIONS[*]}" )
 
 OS_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}
 ASDF_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/asdf
@@ -123,6 +123,17 @@ ELIXIR_BASE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/base
 BUILDER_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/builder
 GENERATE_DOCKERFILE_IMAGE=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/generate-dockerfile
 PREBUILT_IMAGE_PREFIX=gcr.io/${PROJECT}/${NAMESPACE}/${OS_NAME}/prebuilt/otp-
+
+COMMA_ERLANG_VERSIONS=$( IFS=, ; echo "${PREBUILT_ERLANG_VERSIONS[*]}" )
+PREBUILT_IMAGE_ARGS=
+for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
+  tag=$(gcloud container images list-tags ${PREBUILT_IMAGE_PREFIX}${version} --filter=tags=${PREBUILT_IMAGE_TAG} --format="get(tags)" | sed -n 's|.*\([0-9]\{4\}-*[01][0-9]-*[0123][0-9][-_]*[0-9]\{6\}\).*|\1|p')
+  if [ -z "${tag}" ]; then
+    tag=${PREBUILT_IMAGE_TAG}
+  fi
+  echo "Tag for prebuilt erlang ${version}: ${tag}" >&2
+  PREBUILT_IMAGE_ARGS="${PREBUILT_IMAGE_ARGS} '-p', '${version}=${PREBUILT_IMAGE_PREFIX}${version}:${tag}',"
+done
 
 echo
 echo "Building images:"
@@ -142,6 +153,7 @@ if [ "${#PREBUILT_ERLANG_VERSIONS[@]}" = "0" ]; then
 else
   echo "Dockerfile generator uses prebuilt Erlang images for versions:"
   echo "  ${COMMA_ERLANG_VERSIONS}"
+  echo "with tag ${PREBUILT_IMAGE_TAG}"
 fi
 if [ -n "${UPLOAD_BUCKET}" ]; then
   echo "Also creating and uploading a new runtime config:"
@@ -206,7 +218,7 @@ fi
 
 gcloud container builds submit ${DIRNAME}/elixir-generate-dockerfile \
   --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} \
-  --substitutions ^+^_TAG=${IMAGE_TAG}+_ELIXIR_BASE_IMAGE=${ELIXIR_BASE_IMAGE}+_OS_BASE_IMAGE=${OS_BASE_IMAGE}+_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE}+_BUILDER_IMAGE=${BUILDER_IMAGE}+_IMAGE=${GENERATE_DOCKERFILE_IMAGE}+_PREBUILT_IMAGE_PREFIX=${PREBUILT_IMAGE_PREFIX}+_PREBUILT_ERLANG_VERSIONS=${COMMA_ERLANG_VERSIONS}+_DEFAULT_ERLANG_VERSION=${DEFAULT_ERLANG_VERSION}+_DEFAULT_ELIXIR_VERSION=${DEFAULT_ELIXIR_VERSION}
+  --substitutions _TAG=${IMAGE_TAG},_ELIXIR_BASE_IMAGE=${ELIXIR_BASE_IMAGE},_IMAGE=${GENERATE_DOCKERFILE_IMAGE}
 echo "**** Built image: ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
   gcloud container images add-tag --project ${PROJECT} \
@@ -215,7 +227,14 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 mkdir -p ${DIRNAME}/tmp
-sed -e "s|@@GENERATE_DOCKERFILE_IMAGE@@|${GENERATE_DOCKERFILE_IMAGE}|g; s|@@TAG@@|${IMAGE_TAG}|g" \
+sed -e "s|@@GENERATE_DOCKERFILE_IMAGE@@|${GENERATE_DOCKERFILE_IMAGE}|g;\
+        s|@@OS_BASE_IMAGE@@|${OS_BASE_IMAGE}|g;\
+        s|@@ASDF_BASE_IMAGE@@|${ASDF_BASE_IMAGE}|g;\
+        s|@@BUILDER_IMAGE@@|${BUILDER_IMAGE}|g;\
+        s|@@DEFAULT_ERLANG_VERSION@@|${DEFAULT_ERLANG_VERSION}|g;\
+        s|@@DEFAULT_ELIXIR_VERSION@@|${DEFAULT_ELIXIR_VERSION}|g;\
+        s|@@TAG@@|${IMAGE_TAG}|g;\
+        s|@@PREBUILT_IMAGE_ARGS@@|${PREBUILT_IMAGE_ARGS}|g" \
   < ${DIRNAME}/elixir-pipeline/elixir.yaml.in > ${DIRNAME}/tmp/elixir-${IMAGE_TAG}.yaml
 echo "**** Created runtime config: ${DIRNAME}/tmp/elixir-${IMAGE_TAG}.yaml"
 

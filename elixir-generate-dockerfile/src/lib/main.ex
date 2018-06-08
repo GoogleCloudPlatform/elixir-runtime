@@ -24,13 +24,12 @@ defmodule GenerateDockerfile do
           os_image: :string,
           asdf_image: :string,
           builder_image: :string,
-          prebuilt_erlang_image_base: :string,
-          prebuilt_erlang_image_tag: :string,
-          prebuilt_erlang_versions: :string,
+          prebuilt_erlang_images: :keep,
           default_erlang_version: :string,
           default_elixir_version: :string,
           template_dir: :string
-        ]
+        ],
+        aliases: [p: :prebuilt_erlang_images]
       )
 
     if length(leftover) > 0 do

@@ -26,29 +26,25 @@ RUN cd /src \
 # Use the Elixir base image again for the generator runtime.
 FROM elixir-base
 
-ARG os_image
-ARG asdf_image
-ARG builder_image
-ARG prebuilt_erlang_image_base
-ARG prebuilt_erlang_image_tag
-ARG prebuilt_erlang_versions
-ARG default_erlang_version
-ARG default_elixir_version
+ARG os_image=""
+ARG asdf_image=""
+ARG builder_image=""
+ARG prebuilt_erlang_images=""
+ARG default_erlang_version=""
+ARG default_elixir_version=""
+
+ENV DEFAULT_OS_IMAGE=${os_image} \
+    DEFAULT_ASDF_IMAGE=${asdf_image} \
+    DEFAULT_BUILDER_IMAGE=${builder_image} \
+    DEFAULT_PREBUILT_ERLANG_IMAGES=${prebuilt_erlang_images} \
+    DEFAULT_ERLANG_VERSION=${default_erlang_version} \
+    DEFAULT_ELIXIR_VERSION=${default_elixir_version}
 
 # Install the wrapper script and templates.
 COPY app/ /app/
 
 # Copy the built generate_dockerfile escript
 COPY --from=0 /src/generate_dockerfile /app/generate_dockerfile
-
-ENV ELIXIR_OS_IMAGE=${os_image} \
-    ELIXIR_ASDF_IMAGE=${asdf_image} \
-    ELIXIR_BUILDER_IMAGE=${builder_image} \
-    PREBUILT_ERLANG_IMAGE_BASE=${prebuilt_erlang_image_base} \
-    PREBUILT_ERLANG_IMAGE_TAG=${prebuilt_erlang_image_tag} \
-    PREBUILT_ERLANG_VERSIONS=${prebuilt_erlang_versions} \
-    DEFAULT_ERLANG_VERSION=${default_erlang_version} \
-    DEFAULT_ELIXIR_VERSION=${default_elixir_version}
 
 # The entry point runs the generation script.
 ENTRYPOINT ["/app/generate_dockerfile.sh"]
