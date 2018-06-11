@@ -51,7 +51,7 @@ that uses [Phoenix](http://phoenixframework.org/) will work. You will also
 need a Google Cloud project with billing enabled, and you must have the
 [Google Cloud SDK](https://cloud.google.com/sdk/) installed.
 
-(Note: some earlier versions of this README directed you to set the
+(Note: some very early versions of this README directed you to set the
 `app/use_runtime_builders` configuration in gcloud. This step is no longer
 necessary with gcloud 175.0.0 and later, and you should now remove this config
 if you currently have it.)

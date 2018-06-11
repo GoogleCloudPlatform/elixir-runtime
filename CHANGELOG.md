@@ -18,6 +18,12 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2018-06-10-064921
+
+* OTP 20.3.7 is prebuilt and is the default.
+* Update gcloud to 204.0.0
+* Pin prebuilt OTP image tags in each runtime release.
+
 ## elixir-2018-06-01-105216
 
 * OTP 20.3.3, 20.3.4, 20.3.5, and 20.3.6 are now prebuilt.
