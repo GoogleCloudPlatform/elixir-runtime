@@ -101,6 +101,6 @@ gcloud container images add-tag --project ${PROJECT} \
 echo "**** Tagged image ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG} as latest"
 
 if [ -n "${UPLOAD_BUCKET}" ]; then
-  gsutil cp gs://${UPLOAD_BUCKET}/elixir-$IMAG{E_TAG.yaml gs://${UPLOAD_BUCKET}/elixir.yaml
+  gsutil cp gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml gs://${UPLOAD_BUCKET}/elixir.yaml
   echo "**** Promoted runtime config gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml to gs://${UPLOAD_BUCKET}/elixir.yaml"
 fi
