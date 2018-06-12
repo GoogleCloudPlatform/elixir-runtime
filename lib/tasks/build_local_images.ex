@@ -40,6 +40,7 @@ defmodule Mix.Tasks.BuildLocalImages do
         ],
         aliases: [i: :prebuilt_images_tag]
       )
+
     prebuilt_images_tag = Keyword.get(opts, :prebuilt_images_tag, nil)
 
     File.cd!("elixir-#{@os_name}", fn ->
@@ -62,7 +63,8 @@ defmodule Mix.Tasks.BuildLocalImages do
             "elixir-asdf",
             "--build-arg",
             "asdf_version=#{@asdf_version}",
-            "."],
+            "."
+          ],
           into: IO.stream(:stdio, :line)
         )
     end)
@@ -88,21 +90,21 @@ defmodule Mix.Tasks.BuildLocalImages do
       end)
     else
       Enum.each(@prebuilt_erlang_versions, fn version ->
+        image = "gcr.io/gcp-elixir/runtime/#{@os_name}/prebuilt/otp-#{version}"
+
         {_, 0} =
           System.cmd(
             "docker",
-            [
-              "pull",
-              "gcr.io/gcp-elixir/runtime/#{@os_name}/prebuilt/otp-#{version}:#{prebuilt_images_tag}"
-            ],
+            ["pull", "#{image}:#{prebuilt_images_tag}"],
             into: IO.stream(:stdio, :line)
           )
+
         {_, 0} =
           System.cmd(
             "docker",
             [
               "tag",
-              "gcr.io/gcp-elixir/runtime/#{@os_name}/prebuilt/otp-#{version}:#{prebuilt_images_tag}",
+              "#{image}:#{prebuilt_images_tag}",
               "#{@prebuilt_erlang_image_prefix}#{version}"
             ],
             into: IO.stream(:stdio, :line)

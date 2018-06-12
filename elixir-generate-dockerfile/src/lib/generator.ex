@@ -40,15 +40,22 @@ defmodule GenerateDockerfile.Generator do
     os_image = Keyword.get(opts, :os_image, System.get_env("DEFAULT_OS_IMAGE"))
     asdf_image = Keyword.get(opts, :asdf_image, System.get_env("DEFAULT_ASDF_IMAGE"))
     builder_image = Keyword.get(opts, :builder_image, System.get_env("DEFAULT_BUILDER_IMAGE"))
-    default_erlang_version = Keyword.get(opts, :default_erlang_version, System.get_env("DEFAULT_ERLANG_VERSION"))
-    default_elixir_version = Keyword.get(opts, :default_elixir_version, System.get_env("DEFAULT_ELIXIR_VERSION"))
-    prebuilt_erlang_images = Keyword.get_values(opts, :prebuilt_erlang_images) ++
-      case System.get_env("DEFAULT_PREBUILT_ERLANG_IMAGES") do
-        nil -> []
-        str -> String.split(str, ",")
-      end
+
+    default_erlang_version =
+      Keyword.get(opts, :default_erlang_version, System.get_env("DEFAULT_ERLANG_VERSION"))
+
+    default_elixir_version =
+      Keyword.get(opts, :default_elixir_version, System.get_env("DEFAULT_ELIXIR_VERSION"))
+
+    prebuilt_erlang_images =
+      Keyword.get_values(opts, :prebuilt_erlang_images) ++
+        case System.get_env("DEFAULT_PREBUILT_ERLANG_IMAGES") do
+          nil -> []
+          str -> String.split(str, ",")
+        end
 
     workspace_dir = Keyword.get(opts, :workspace_dir, @default_workspace_dir) |> Path.expand()
+
     template_dir =
       Keyword.get(opts, :template_dir, @default_template_dir)
       |> Path.expand()
@@ -75,9 +82,11 @@ defmodule GenerateDockerfile.Generator do
   defp start_app_config(_workspace_dir, "", _default_elixir_version) do
     GenerateDockerfile.error("Missing default erlang version")
   end
+
   defp start_app_config(_workspace_dir, _default_erlang_version, "") do
     GenerateDockerfile.error("Missing default elixir version")
   end
+
   defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version) do
     {:ok, _} =
       AppConfig.start_link(
@@ -103,12 +112,13 @@ defmodule GenerateDockerfile.Generator do
     erlang_version = AppConfig.get!(:erlang_version)
     elixir_version = AppConfig.get!(:elixir_version)
 
-    prebuilt_erlang_image = Enum.find_value(prebuilt_erlang_images, fn str ->
-      case String.split(str, "=", parts: 2) do
-        [^erlang_version, image] -> image
-        _ -> nil
-      end
-    end)
+    prebuilt_erlang_image =
+      Enum.find_value(prebuilt_erlang_images, fn str ->
+        case String.split(str, "=", parts: 2) do
+          [^erlang_version, image] -> image
+          _ -> nil
+        end
+      end)
 
     [
       os_image: os_image,

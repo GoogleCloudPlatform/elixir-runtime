@@ -308,6 +308,7 @@ defmodule GeneratorTest do
       default_erlang_version: "20.2",
       default_elixir_version: "1.5.3-otp-20"
     ]
+
     opts =
       if prebuilt_erlang_versions == "" do
         opts
