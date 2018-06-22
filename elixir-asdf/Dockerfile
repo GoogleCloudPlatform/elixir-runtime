@@ -26,14 +26,17 @@ ARG DEBIAN_FRONTEND=noninteractive
 RUN apt-get update -y \
     && apt-get install -y -q --no-install-recommends \
         autoconf \
+        automake \
         build-essential \
         curl \
+        fop \
         git \
         libncurses-dev \
         libreadline-dev \
         libssl-dev \
         unixodbc-dev \
         unzip \
+        xsltproc \
     && apt-get clean \
     && rm -f /var/lib/apt/lists/*_*
 

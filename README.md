@@ -173,15 +173,15 @@ Erlang 17, and can install any of these directly.
 
 However, if you request an Erlang version for which we do not have a prebuilt
 binary, the Elixir runtime will have to build Erlang from source. This can
-take a good 5-10 minutes by itself, and it often causes App Engine deployment
+take a good 10-20 minutes by itself, and it often causes App Engine deployment
 to time out. To fix this, set the following:
 
-    gcloud config set app/cloud_build_timeout 20m
+    gcloud config set app/cloud_build_timeout 60m
 
-This allocates 20 minutes to the "build" phase of app engine deployment, which
-should be sufficient to build both Erlang and your application. (If it still
-times out, feel free to increase it further.) If this gcloud configuration is
-not explicitly set, it defaults to 10 minutes.
+This allocates 60 minutes to the "build" phase of app engine deployment, which
+should be more than sufficient to build both Erlang and your application. (Feel
+free to set it to a different value if you want.) If this gcloud configuration
+is not explicitly set, it defaults to 10 minutes.
 
 ### Customizing application builds
 
