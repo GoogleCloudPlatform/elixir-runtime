@@ -18,6 +18,14 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2018-06-22-144237
+
+* OTP 20.3.8 and 21.0 are now prebuilt.
+* Update default OTP to 20.3.8, and default Elixir to 1.6.6
+* Update gcloud to 205.0.0
+* Build image now includes automake, fop, and xsltproc, to support recent
+  asdf-erlang changes.
+
 ## elixir-2018-06-10-064921
 
 * OTP 20.3.7 is prebuilt and is the default.
