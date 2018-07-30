@@ -18,6 +18,14 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2018-07-30-122802
+
+* Prebuilt OTP through 20.3.8.3 and 21.0.4
+* Update default OTP to 21.0.4, and default Elixir to 1.7.1
+* Update gcloud to 209.0.0
+* Update nodejs to 8.11.3
+* Modify pipeline config so there is room for more erlang prebuilts.
+
 ## elixir-2018-06-22-144237
 
 * OTP 20.3.8 and 21.0 are now prebuilt.
