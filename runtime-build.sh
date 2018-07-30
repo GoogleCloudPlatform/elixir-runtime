@@ -15,11 +15,11 @@
 # limitations under the License.
 
 
-DEFAULT_ERLANG_VERSION=20.3.8
-DEFAULT_ELIXIR_VERSION=1.6.6-otp-20
-ASDF_VERSION=0.5.0
-GCLOUD_VERSION=205.0.0
-NODEJS_VERSION=8.11.2
+DEFAULT_ERLANG_VERSION=21.0.4
+DEFAULT_ELIXIR_VERSION=1.7.1-otp-21
+ASDF_VERSION=0.5.1
+GCLOUD_VERSION=209.0.0
+NODEJS_VERSION=8.11.3
 
 
 set -e
@@ -132,7 +132,7 @@ for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
     tag=${PREBUILT_IMAGE_TAG}
   fi
   echo "Tag for prebuilt erlang ${version}: ${tag}" >&2
-  PREBUILT_IMAGE_ARGS="${PREBUILT_IMAGE_ARGS} '-p', '${version}=${PREBUILT_IMAGE_PREFIX}${version}:${tag}',"
+  PREBUILT_IMAGE_ARGS="${PREBUILT_IMAGE_ARGS} '-p=${version}=${PREBUILT_IMAGE_PREFIX}${version}:${tag}',"
 done
 
 echo
