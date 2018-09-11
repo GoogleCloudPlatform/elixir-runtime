@@ -134,7 +134,7 @@ fi
 echo
 
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
-  gcloud container builds submit ${DIRNAME}/elixir-prebuilt-erlang \
+  gcloud builds submit ${DIRNAME}/elixir-prebuilt-erlang \
     --config ${DIRNAME}/elixir-prebuilt-erlang/cloudbuild.yaml --project ${PROJECT} --timeout 60m \
     --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_PREBUILT_IMAGE_PREFIX=${PREBUILT_IMAGE_PREFIX},_ASDF_TAG=${ASDF_IMAGE_TAG},_ERLANG_VERSION=${version}
   echo "**** Built image: ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG}"

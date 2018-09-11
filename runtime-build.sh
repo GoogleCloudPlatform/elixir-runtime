@@ -15,11 +15,11 @@
 # limitations under the License.
 
 
-DEFAULT_ERLANG_VERSION=20.3.8.3
-DEFAULT_ELIXIR_VERSION=1.6.6-otp-20
+DEFAULT_ERLANG_VERSION=21.0.8
+DEFAULT_ELIXIR_VERSION=1.7.3-otp-21
 ASDF_VERSION=0.5.1
-GCLOUD_VERSION=209.0.0
-NODEJS_VERSION=8.11.3
+GCLOUD_VERSION=215.0.0
+NODEJS_VERSION=8.11.4
 
 
 set -e
@@ -174,7 +174,7 @@ if [ -z "${AUTO_YES}" ]; then
 fi
 echo
 
-gcloud container builds submit ${DIRNAME}/elixir-${OS_NAME} \
+gcloud builds submit ${DIRNAME}/elixir-${OS_NAME} \
   --config ${DIRNAME}/elixir-${OS_NAME}/cloudbuild.yaml --project ${PROJECT} \
   --substitutions _TAG=${IMAGE_TAG},_IMAGE=${OS_BASE_IMAGE}
 echo "**** Built image: ${OS_BASE_IMAGE}:${IMAGE_TAG}"
@@ -184,7 +184,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
   echo "**** Tagged image as ${OS_BASE_IMAGE}:staging"
 fi
 
-gcloud container builds submit ${DIRNAME}/elixir-asdf \
+gcloud builds submit ${DIRNAME}/elixir-asdf \
   --config ${DIRNAME}/elixir-asdf/cloudbuild.yaml --project ${PROJECT} \
   --substitutions _TAG=${IMAGE_TAG},_OS_BASE_IMAGE=${OS_BASE_IMAGE},_IMAGE=${ASDF_BASE_IMAGE},_ASDF_VERSION=${ASDF_VERSION}
 echo "**** Built image: ${ASDF_BASE_IMAGE}:${IMAGE_TAG}"
@@ -196,7 +196,7 @@ fi
 
 sed -e "s|@@PREBUILT_ERLANG_IMAGE@@|${PREBUILT_IMAGE_PREFIX}${DEFAULT_ERLANG_VERSION}:latest|g" \
   < ${DIRNAME}/elixir-base/Dockerfile-${BASE_IMAGE_DOCKERFILE}.in > ${DIRNAME}/elixir-base/Dockerfile
-gcloud container builds submit ${DIRNAME}/elixir-base \
+gcloud builds submit ${DIRNAME}/elixir-base \
   --config ${DIRNAME}/elixir-base/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${ELIXIR_BASE_IMAGE},_ERLANG_VERSION=${DEFAULT_ERLANG_VERSION},_ELIXIR_VERSION=${DEFAULT_ELIXIR_VERSION}
 echo "**** Built image: ${ELIXIR_BASE_IMAGE}:${IMAGE_TAG}"
@@ -206,7 +206,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
   echo "**** Tagged image as ${ELIXIR_BASE_IMAGE}:staging"
 fi
 
-gcloud container builds submit ${DIRNAME}/elixir-builder \
+gcloud builds submit ${DIRNAME}/elixir-builder \
   --config ${DIRNAME}/elixir-builder/cloudbuild.yaml --project ${PROJECT} \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${BUILDER_IMAGE},_NODEJS_VERSION=${NODEJS_VERSION},_GCLOUD_VERSION=${GCLOUD_VERSION}
 echo "**** Built image: ${BUILDER_IMAGE}:${IMAGE_TAG}"
@@ -216,7 +216,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
   echo "**** Tagged image as ${BUILDER_IMAGE}:staging"
 fi
 
-gcloud container builds submit ${DIRNAME}/elixir-generate-dockerfile \
+gcloud builds submit ${DIRNAME}/elixir-generate-dockerfile \
   --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} \
   --substitutions _TAG=${IMAGE_TAG},_ELIXIR_BASE_IMAGE=${ELIXIR_BASE_IMAGE},_IMAGE=${GENERATE_DOCKERFILE_IMAGE}
 echo "**** Built image: ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG}"
