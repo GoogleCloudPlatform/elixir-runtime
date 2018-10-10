@@ -15,11 +15,11 @@
 # limitations under the License.
 
 
-DEFAULT_ERLANG_VERSION=21.0.8
+DEFAULT_ERLANG_VERSION=21.0.9
 DEFAULT_ELIXIR_VERSION=1.7.3-otp-21
-ASDF_VERSION=0.5.1
-GCLOUD_VERSION=215.0.0
-NODEJS_VERSION=8.11.4
+ASDF_VERSION=0.6.0
+GCLOUD_VERSION=219.0.1
+NODEJS_VERSION=8.12.0
 
 
 set -e
@@ -175,7 +175,7 @@ fi
 echo
 
 gcloud builds submit ${DIRNAME}/elixir-${OS_NAME} \
-  --config ${DIRNAME}/elixir-${OS_NAME}/cloudbuild.yaml --project ${PROJECT} \
+  --config ${DIRNAME}/elixir-${OS_NAME}/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_IMAGE=${OS_BASE_IMAGE}
 echo "**** Built image: ${OS_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -185,7 +185,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-asdf \
-  --config ${DIRNAME}/elixir-asdf/cloudbuild.yaml --project ${PROJECT} \
+  --config ${DIRNAME}/elixir-asdf/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_OS_BASE_IMAGE=${OS_BASE_IMAGE},_IMAGE=${ASDF_BASE_IMAGE},_ASDF_VERSION=${ASDF_VERSION}
 echo "**** Built image: ${ASDF_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -207,7 +207,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-builder \
-  --config ${DIRNAME}/elixir-builder/cloudbuild.yaml --project ${PROJECT} \
+  --config ${DIRNAME}/elixir-builder/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${BUILDER_IMAGE},_NODEJS_VERSION=${NODEJS_VERSION},_GCLOUD_VERSION=${GCLOUD_VERSION}
 echo "**** Built image: ${BUILDER_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -217,7 +217,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-generate-dockerfile \
-  --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} \
+  --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
   --substitutions _TAG=${IMAGE_TAG},_ELIXIR_BASE_IMAGE=${ELIXIR_BASE_IMAGE},_IMAGE=${GENERATE_DOCKERFILE_IMAGE}
 echo "**** Built image: ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then

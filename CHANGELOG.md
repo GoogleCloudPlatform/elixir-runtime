@@ -9,14 +9,22 @@ choosing the following in your `app.yaml` config file:
 
 However, you may also pin to a specific version of the runtime by specifying
 the version name as the yaml file name. For example, to pin to the
-`elixir-2018-09-11-102415` release, use:
+`elixir-2018-10-10-134614` release, use:
 
-    runtime: gs://elixir-runtime/elixir-2018-09-11-102415.yaml
+    runtime: gs://elixir-runtime/elixir-2018-10-10-134614.yaml
 
 There is currently no guarantee regarding how long older runtime releases will
 continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
+
+## elixir-2018-10-10-134614
+
+* Set ASDF_DATA_DIR to fix asdf after being updated to 0.6.
+* Prebuilt OTP 20.3.8.9, 21.0.9, and 21.1.
+* Update default OTP to 21.0.9. Default Elixir remains 1.7.3.
+* Update gcloud to 219.0.1.
+* Update nodejs to 8.12.0.
 
 ## elixir-2018-09-11-102415
 

@@ -42,6 +42,7 @@ RUN apt-get update -y \
 
 # Install Elixir and Erlang via asdf
 ENV ASDF_DIR=${asdf_dir} \
+    ASDF_DATA_DIR=${asdf_dir} \
     PATH=${asdf_dir}/bin:${asdf_dir}/shims:${PATH}
 RUN mkdir -p ${asdf_dir} \
     && git clone https://github.com/asdf-vm/asdf.git ${asdf_dir} --branch v${asdf_version} \
