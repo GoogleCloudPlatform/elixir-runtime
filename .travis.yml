@@ -18,4 +18,4 @@ before_install:
   - sudo apt-get -y install docker-ce
 
 script:
-  - mix build_local_images && mix test
+  - mix build_local_images --prebuilt-images-tag=staging && mix test

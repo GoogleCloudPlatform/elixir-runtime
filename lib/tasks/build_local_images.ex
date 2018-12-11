@@ -32,8 +32,8 @@ defmodule Mix.Tasks.BuildLocalImages do
   use Mix.Task
 
   def run(args) do
-    {opts, _leftover, _unknown} =
-      OptionParser.parse(
+    {opts, _leftover} =
+      OptionParser.parse!(
         args,
         strict: [
           prebuilt_images_tag: :string
