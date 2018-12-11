@@ -194,10 +194,20 @@ compilation but before release generation. Your application might use this
 space for application-specific or framework-specific build steps such as
 building asset files or obtaining credentials.
 
-Phoenix applications use brunch to build assets by default. So, by default, if
-the Elixir runtime detects that your app uses Phoenix and brunch, it will
-automatically give you a custom build command that attempts a brunch build.
-Specifically, for Phoenix 1.3, this command is:
+Phoenix applications generally use Webpack or Brunch to build assets. So, by
+default, if the Elixir runtime detects that your app uses Phoenix and contains
+a brunch or webpack config file, it will automatically give you a custom build
+command that attempts the appropriate build.
+
+Specifically, for Phoenix 1.4 using Webpack, this command is:
+
+    cd assets \
+    && npm install \
+    && node_modules/webpack/bin/webpack.js --mode production \
+    && cd .. \
+    && mix phx.digest
+
+Similarly, for Phoenix 1.3 using Brunch, this command is:
 
     cd assets \
     && npm install \
@@ -218,8 +228,9 @@ be an array of shell commands to be executed in order. For example:
         - mix do.something.else
 
 Note that if you provide your own custom build commands, they will override
-any brunch build that the Elixir Runtime gives you by default, so if you still
-want to brunch build, you will have to include it explicitly in your config.
+any Webpack or Brunch build that the Elixir Runtime gives you by default, so
+if you still want to use one of those asset build systems, you will have to
+include a command explicitly in your config.
 
 ### Installing Debian packages
 
