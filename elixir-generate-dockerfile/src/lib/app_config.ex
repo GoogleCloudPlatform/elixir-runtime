@@ -101,8 +101,9 @@ defmodule GenerateDockerfile.AppConfig do
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
     entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app)
-    brunch_dir = get_brunch_dir(workspace_dir, phoenix_version)
-    build_scripts = get_build_scripts(runtime_config, brunch_dir, phoenix_prefix)
+    assets_dir = get_assets_dir(workspace_dir, phoenix_version)
+    assets_builder = get_assets_builder(workspace_dir, assets_dir)
+    build_scripts = get_build_scripts(runtime_config, assets_dir, assets_builder, phoenix_prefix)
 
     %{
       workspace_dir: workspace_dir,
@@ -120,7 +121,8 @@ defmodule GenerateDockerfile.AppConfig do
       install_packages: install_packages,
       cloud_sql_instances: cloud_sql_instances,
       phoenix_version: phoenix_version,
-      brunch_dir: brunch_dir,
+      assets_dir: assets_dir,
+      assets_builder: assets_builder,
       entrypoint: entrypoint,
       build_scripts: build_scripts
     }
@@ -339,9 +341,9 @@ defmodule GenerateDockerfile.AppConfig do
     end
   end
 
-  defp get_brunch_dir(_workspace_dir, nil), do: nil
+  defp get_assets_dir(_workspace_dir, nil), do: nil
 
-  defp get_brunch_dir(workspace_dir, _phoenix_version) do
+  defp get_assets_dir(workspace_dir, _phoenix_version) do
     apps_dir = Path.join(workspace_dir, "apps")
 
     app_dirs =
@@ -358,38 +360,70 @@ defmodule GenerateDockerfile.AppConfig do
     |> Enum.flat_map(fn dir -> [dir, Path.join(dir, "assets")] end)
     |> Enum.find(fn dir ->
       File.regular?(Path.join(dir, "package.json")) &&
-        File.regular?(Path.join(dir, "brunch-config.js"))
+        (File.regular?(Path.join(dir, "brunch-config.js")) ||
+           File.regular?(Path.join(dir, "webpack.config.js")))
     end)
     |> case do
       nil -> nil
       ^workspace_dir -> "."
-      brunch_dir -> Path.relative_to(brunch_dir, workspace_dir)
+      dir -> Path.relative_to(dir, workspace_dir)
     end
   end
 
-  defp get_build_scripts(runtime_config, brunch_dir, phoenix_prefix) do
+  defp get_assets_builder(_workspace_dir, nil), do: nil
+
+  defp get_assets_builder(workspace_dir, assets_dir) do
+    base_dir = Path.expand(assets_dir, workspace_dir)
+
+    cond do
+      File.regular?(Path.join(base_dir, "webpack.config.js")) -> "webpack"
+      File.regular?(Path.join(base_dir, "brunch-config.js")) -> "brunch"
+      true -> nil
+    end
+  end
+
+  defp get_build_scripts(runtime_config, assets_dir, assets_builder, phoenix_prefix) do
     runtime_config
-    |> Map.get_lazy("build", fn -> default_build_scripts(brunch_dir, phoenix_prefix) end)
+    |> Map.get_lazy("build", fn ->
+      default_build_scripts(assets_dir, assets_builder, phoenix_prefix)
+    end)
     |> List.wrap()
     |> validate_build_scripts
   end
 
-  defp default_build_scripts(nil, _phoenix_prefix), do: []
+  defp default_build_scripts(nil, _assets_builder, _phoenix_prefix), do: []
 
-  defp default_build_scripts(".", phoenix_prefix) do
+  defp default_build_scripts(".", "brunch", phoenix_prefix) do
     [
       "npm install && node_modules/brunch/bin/brunch build --production" <>
         " && mix #{phoenix_prefix}.digest"
     ]
   end
 
-  defp default_build_scripts(brunch_dir, phoenix_prefix) do
+  defp default_build_scripts(".", "webpack", phoenix_prefix) do
     [
-      "cd #{brunch_dir} && npm install" <>
+      "npm install && node_modules/webpack/bin/webpack.js --mode production" <>
+        " && mix #{phoenix_prefix}.digest"
+    ]
+  end
+
+  defp default_build_scripts(assets_dir, "brunch", phoenix_prefix) do
+    [
+      "cd #{assets_dir} && npm install" <>
         " && node_modules/brunch/bin/brunch build --production" <>
         " && cd .. && mix #{phoenix_prefix}.digest"
     ]
   end
+
+  defp default_build_scripts(assets_dir, "webpack", phoenix_prefix) do
+    [
+      "cd #{assets_dir} && npm install" <>
+        " && node_modules/webpack/bin/webpack.js --mode production" <>
+        " && cd .. && mix #{phoenix_prefix}.digest"
+    ]
+  end
+
+  defp default_build_scripts(_dir, _assets_builder, _phoenix_prefix), do: []
 
   defp validate_build_scripts(scripts) do
     Enum.each(scripts, fn script ->

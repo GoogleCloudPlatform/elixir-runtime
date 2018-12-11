@@ -3,10 +3,10 @@ sudo: required
 language: elixir
 elixir:
   - '1.6.6'
-  - '1.7.1'
+  - '1.7.4'
 otp_release:
   - '20.3.8'
-  - '21.0'
+  - '21.1.4'
 
 services:
   - docker
@@ -18,4 +18,4 @@ before_install:
   - sudo apt-get -y install docker-ce
 
 script:
-  - mix build_local_images && mix test
+  - mix build_local_images --prebuilt-images-tag=staging && mix test
