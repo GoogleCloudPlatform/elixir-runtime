@@ -18,6 +18,14 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## HEAD (unreleased)
+
+* The runtime now recognizes Phoenix 1.4 and webpack when building assets. (Brunch is still supported for older projects.)
+* Prebuilt OTP 20.3.8.x up to 20.3.8.15, and 21.1.x up to 21.1.4.
+* Update default OTP to 21.1.4 and default Elixir to 1.7.4.
+* Update gcloud to 227.0.0.
+* Update nodejs to 10.14.1.
+
 ## elixir-2018-10-10-134614
 
 * Set ASDF_DATA_DIR to fix asdf after being updated to 0.6.

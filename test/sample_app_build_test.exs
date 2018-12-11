@@ -44,7 +44,7 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.5\.1},
+          ~r{1\.6\.6},
           show: true
         )
       end
@@ -71,7 +71,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.5.1",
+          "1.6.6",
           timeout: 10,
           show: true,
           verbose: true
@@ -103,6 +103,59 @@ defmodule SampleAppBuildTest do
     """
 
     run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
+  end
+
+  test "Minimal phoenix 1.4 app" do
+    config = """
+    env: flex
+    runtime: elixir
+    """
+
+    run_app_test(
+      "minimal_phoenix14",
+      config,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
+          show: true
+        )
+
+        assert_cmd_output(
+          ["docker", "run", "--rm", image, "elixir", "--version"],
+          ~r{1\.7\.4},
+          show: true
+        )
+      end
+    )
+  end
+
+  test "Minimal phoenix 1.4 app with release" do
+    config = """
+    env: flex
+    runtime: elixir
+    runtime_config:
+      release_app: minimal_phoenix14
+    """
+
+    run_app_test(
+      "minimal_phoenix14",
+      config,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix14"],
+          show: true
+        )
+      end,
+      check_container: fn _container ->
+        assert_cmd_output(
+          ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
+          "1.7.4",
+          timeout: 10,
+          show: true,
+          verbose: true
+        )
+      end
+    )
   end
 
   @apps_dir Path.join(__DIR__, "sample_apps")

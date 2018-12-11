@@ -85,7 +85,8 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:cloud_sql_instances, pid) == []
     assert AppConfig.get!(:entrypoint, pid) == "exec mix run --no-halt"
     assert AppConfig.get!(:phoenix_version, pid) == nil
-    assert AppConfig.get!(:brunch_dir, pid) == nil
+    assert AppConfig.get!(:assets_dir, pid) == nil
+    assert AppConfig.get!(:assets_builder, pid) == nil
     assert AppConfig.get!(:build_scripts, pid) == []
     assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
     assert AppConfig.get!(:elixir_version, pid) == @default_elixir_version
@@ -217,12 +218,29 @@ defmodule AppConfigTest do
     assert AppConfig.get!(:entrypoint, pid) == "exec mix app.start"
   end
 
+  test "phoenix 1.4 defaults" do
+    pid = AppConfigTest.setup_test("phoenix_1_4", @minimal_config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
+    assert AppConfig.get!(:phoenix_version, pid) == "1.4.0"
+    assert AppConfig.get!(:assets_dir, pid) == "assets"
+    assert AppConfig.get!(:assets_builder, pid) == "webpack"
+
+    assert AppConfig.get!(:build_scripts, pid) == [
+             "cd assets && npm install && node_modules/webpack/bin/webpack.js --mode production && cd .. && mix phx.digest"
+           ]
+
+    assert AppConfig.get!(:erlang_version, pid) == "21.1"
+    assert AppConfig.get!(:elixir_version, pid) == "1.7.4-otp-21"
+  end
+
   test "phoenix 1.3 defaults" do
     pid = AppConfigTest.setup_test("phoenix_1_3", @minimal_config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
     assert AppConfig.get!(:phoenix_version, pid) == "1.3.0"
-    assert AppConfig.get!(:brunch_dir, pid) == "assets"
+    assert AppConfig.get!(:assets_dir, pid) == "assets"
+    assert AppConfig.get!(:assets_builder, pid) == "brunch"
 
     assert AppConfig.get!(:build_scripts, pid) == [
              "cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
@@ -237,7 +255,8 @@ defmodule AppConfigTest do
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
     assert AppConfig.get!(:phoenix_version, pid) == "1.3.0"
-    assert AppConfig.get!(:brunch_dir, pid) == "apps/blog_web/assets"
+    assert AppConfig.get!(:assets_dir, pid) == "apps/blog_web/assets"
+    assert AppConfig.get!(:assets_builder, pid) == "brunch"
 
     assert AppConfig.get!(:build_scripts, pid) == [
              "cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
@@ -252,7 +271,8 @@ defmodule AppConfigTest do
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phoenix.server"
     assert AppConfig.get!(:phoenix_version, pid) == "1.2.5"
-    assert AppConfig.get!(:brunch_dir, pid) == "."
+    assert AppConfig.get!(:assets_dir, pid) == "."
+    assert AppConfig.get!(:assets_builder, pid) == "brunch"
 
     assert AppConfig.get!(:build_scripts, pid) == [
              "npm install && node_modules/brunch/bin/brunch build --production && mix phoenix.digest"

@@ -31,7 +31,7 @@ defmodule GenerateDockerfile.Generator do
   @phoenix_dockerignore [
     "priv/static"
   ]
-  @brunch_dockerignore [
+  @assets_dockerignore [
     "npm-debug.log",
     "node_modules"
   ]
@@ -189,17 +189,17 @@ defmodule GenerateDockerfile.Generator do
   end
 
   defp determine_desired_dockerignore_entries() do
-    brunch_dir = AppConfig.get!(:brunch_dir)
+    assets_dir = AppConfig.get!(:assets_dir)
 
-    brunch_entries =
-      case brunch_dir do
+    assets_entries =
+      case assets_dir do
         nil -> []
-        "." -> @brunch_dockerignore
-        brunch_dir -> Enum.map(@brunch_dockerignore, &Path.join(brunch_dir, &1))
+        "." -> @assets_dockerignore
+        dir -> Enum.map(@assets_dockerignore, &Path.join(dir, &1))
       end
 
-    phoenix_entries = if brunch_dir == nil, do: [], else: @phoenix_dockerignore
-    [AppConfig.get!(:app_yaml_path) | @common_dockerignore] ++ brunch_entries ++ phoenix_entries
+    phoenix_entries = if assets_dir == nil, do: [], else: @phoenix_dockerignore
+    [AppConfig.get!(:app_yaml_path) | @common_dockerignore] ++ assets_entries ++ phoenix_entries
   end
 
   defp write_dockerignore(workspace_dir, desired_entries) do
