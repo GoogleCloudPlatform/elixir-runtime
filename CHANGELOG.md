@@ -9,16 +9,16 @@ choosing the following in your `app.yaml` config file:
 
 However, you may also pin to a specific version of the runtime by specifying
 the version name as the yaml file name. For example, to pin to the
-`elixir-2018-10-10-134614` release, use:
+`elixir-2018-12-11-124828` release, use:
 
-    runtime: gs://elixir-runtime/elixir-2018-10-10-134614.yaml
+    runtime: gs://elixir-runtime/elixir-2018-12-11-124828.yaml
 
 There is currently no guarantee regarding how long older runtime releases will
 continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## HEAD (unreleased)
+## elixir-2018-12-11-124828
 
 * The runtime now recognizes Phoenix 1.4 and webpack when building assets. (Brunch is still supported for older projects.)
 * Prebuilt OTP 20.3.8.x up to 20.3.8.15, and 21.1.x up to 21.1.4.
