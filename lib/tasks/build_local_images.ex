@@ -19,7 +19,7 @@ defmodule Mix.Tasks.BuildLocalImages do
 
   @shortdoc "Build images locally."
 
-  @os_name "ubuntu16"
+  @os_name "ubuntu18"
   @prebuilt_erlang_versions ["21.2.2"]
   @base_erlang_version "21.2.2"
   @base_elixir_version "1.7.4-otp-21"

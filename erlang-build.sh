@@ -19,7 +19,7 @@ set -e
 
 DIRNAME=$(dirname $0)
 
-OS_NAME=ubuntu16
+OS_NAME=ubuntu18
 PROJECT=
 NAMESPACE=elixir
 IMAGE_TAG=
@@ -30,6 +30,7 @@ if [ -f ${DIRNAME}/erlang-versions.txt ]; then
 fi
 STAGING_FLAG=
 AUTO_YES=
+BUILD_TIMEOUT=60m
 
 show_usage() {
   echo 'Usage: ./erlang-build.sh [flags...]' >&2
@@ -37,7 +38,7 @@ show_usage() {
   echo '  -a <tag>: use this asdf image tag (defaults to `staging`)' >&2
   echo '  -e <versions>: comma separated versions (defaults to erlang-versions.txt)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
-  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu18`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -s: also tag new images as `staging`' >&2
   echo '  -t <tag>: set the new image tag (creates a new tag if not provided)' >&2
@@ -135,7 +136,7 @@ echo
 
 for version in "${PREBUILT_ERLANG_VERSIONS[@]}"; do
   gcloud builds submit ${DIRNAME}/elixir-prebuilt-erlang \
-    --config ${DIRNAME}/elixir-prebuilt-erlang/cloudbuild.yaml --project ${PROJECT} --timeout 60m \
+    --config ${DIRNAME}/elixir-prebuilt-erlang/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
     --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_PREBUILT_IMAGE_PREFIX=${PREBUILT_IMAGE_PREFIX},_ASDF_TAG=${ASDF_IMAGE_TAG},_ERLANG_VERSION=${version}
   echo "**** Built image: ${PREBUILT_IMAGE_PREFIX}${version}:${IMAGE_TAG}"
   if [ "${STAGING_FLAG}" = "true" ]; then
