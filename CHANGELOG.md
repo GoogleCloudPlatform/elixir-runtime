@@ -18,6 +18,13 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## Unreleased
+
+* Prebuilt OTP 21.2, 21.2.1, and 21.2.2.
+* Update default OTP to 21.2.2.
+* Update gcloud to 228.0.0.
+* Update nodejs to 10.15.0.
+
 ## elixir-2018-12-11-124828
 
 * The runtime now recognizes Phoenix 1.4 and webpack when building assets. (Brunch is still supported for older projects.)
