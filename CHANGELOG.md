@@ -21,7 +21,13 @@ soon as possible.
 ## Unreleased
 
 * Updated the underlying OS from Ubuntu 16.04 (Xenial) to Ubuntu 18.04 (Bionic).
+
+## elixir-2019-01-19-000446
+
+* This is the last planned release on Ubuntu 16.04 (Xenial). Future releases will update to Ubuntu 18.04 (Bionic). To remain on Xenial, pin to this release by setting the runtime to `gs://elixir-runtime/elixir-ubuntu16.yaml`
 * Prebuilt OTP 20.3 up to 20.3.8.18, and 21.2 up to 21.2.3.
+* Update default OTP to 21.2.3.
+* Update gcloud to 230.0.0.
 
 ## elixir-2019-01-02-104948
 
