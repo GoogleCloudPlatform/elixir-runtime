@@ -15,18 +15,18 @@
 # limitations under the License.
 
 
-DEFAULT_ERLANG_VERSION=21.2.3
-DEFAULT_ELIXIR_VERSION=1.7.4-otp-21
-ASDF_VERSION=0.6.2
-GCLOUD_VERSION=230.0.0
-NODEJS_VERSION=10.15.0
+DEFAULT_ERLANG_VERSION=21.2.6
+DEFAULT_ELIXIR_VERSION=1.8.1-otp-21
+ASDF_VERSION=0.7.0
+GCLOUD_VERSION=236.0.0
+NODEJS_VERSION=10.15.2
 
 
 set -e
 
 DIRNAME=$(dirname $0)
 
-OS_NAME=ubuntu16
+OS_NAME=ubuntu18
 PROJECT=
 NAMESPACE=elixir
 IMAGE_TAG=
@@ -34,6 +34,7 @@ BASE_IMAGE_DOCKERFILE=default
 STAGING_FLAG=
 UPLOAD_BUCKET=
 AUTO_YES=
+BUILD_TIMEOUT=60m
 PREBUILT_IMAGE_TAG=latest
 PREBUILT_ERLANG_VERSIONS=()
 if [ -f ${DIRNAME}/erlang-versions.txt ]; then
@@ -47,7 +48,7 @@ show_usage() {
   echo '  -e <versions>: comma separated prebuilt erlang versions (defaults to erlang-versions.txt)' >&2
   echo '  -i: use prebuilt erlang to build base image' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
-  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu18`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -s: also tag new images as `staging`' >&2
   echo '  -t <tag>: set the new image tag (creates a new tag if not provided)' >&2
@@ -175,7 +176,7 @@ fi
 echo
 
 gcloud builds submit ${DIRNAME}/elixir-${OS_NAME} \
-  --config ${DIRNAME}/elixir-${OS_NAME}/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+  --config ${DIRNAME}/elixir-${OS_NAME}/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
   --substitutions _TAG=${IMAGE_TAG},_IMAGE=${OS_BASE_IMAGE}
 echo "**** Built image: ${OS_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -185,7 +186,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-asdf \
-  --config ${DIRNAME}/elixir-asdf/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+  --config ${DIRNAME}/elixir-asdf/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
   --substitutions _TAG=${IMAGE_TAG},_OS_BASE_IMAGE=${OS_BASE_IMAGE},_IMAGE=${ASDF_BASE_IMAGE},_ASDF_VERSION=${ASDF_VERSION}
 echo "**** Built image: ${ASDF_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -197,7 +198,7 @@ fi
 sed -e "s|@@PREBUILT_ERLANG_IMAGE@@|${PREBUILT_IMAGE_PREFIX}${DEFAULT_ERLANG_VERSION}:latest|g" \
   < ${DIRNAME}/elixir-base/Dockerfile-${BASE_IMAGE_DOCKERFILE}.in > ${DIRNAME}/elixir-base/Dockerfile
 gcloud builds submit ${DIRNAME}/elixir-base \
-  --config ${DIRNAME}/elixir-base/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+  --config ${DIRNAME}/elixir-base/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${ELIXIR_BASE_IMAGE},_ERLANG_VERSION=${DEFAULT_ERLANG_VERSION},_ELIXIR_VERSION=${DEFAULT_ELIXIR_VERSION}
 echo "**** Built image: ${ELIXIR_BASE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -207,7 +208,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-builder \
-  --config ${DIRNAME}/elixir-builder/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+  --config ${DIRNAME}/elixir-builder/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
   --substitutions _TAG=${IMAGE_TAG},_ASDF_BASE_IMAGE=${ASDF_BASE_IMAGE},_IMAGE=${BUILDER_IMAGE},_NODEJS_VERSION=${NODEJS_VERSION},_GCLOUD_VERSION=${GCLOUD_VERSION}
 echo "**** Built image: ${BUILDER_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then
@@ -217,7 +218,7 @@ if [ "${STAGING_FLAG}" = "true" ]; then
 fi
 
 gcloud builds submit ${DIRNAME}/elixir-generate-dockerfile \
-  --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} --timeout 30m \
+  --config ${DIRNAME}/elixir-generate-dockerfile/cloudbuild.yaml --project ${PROJECT} --timeout ${BUILD_TIMEOUT} \
   --substitutions _TAG=${IMAGE_TAG},_ELIXIR_BASE_IMAGE=${ELIXIR_BASE_IMAGE},_IMAGE=${GENERATE_DOCKERFILE_IMAGE}
 echo "**** Built image: ${GENERATE_DOCKERFILE_IMAGE}:${IMAGE_TAG}"
 if [ "${STAGING_FLAG}" = "true" ]; then

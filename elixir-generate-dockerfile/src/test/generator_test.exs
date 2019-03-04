@@ -33,7 +33,7 @@ defmodule GeneratorTest do
     refute_file_contents(Path.join(@tmp_dir, ".dockerignore"), ~r{node_modules}m)
     assert_dockerfile_line("## Service: default")
     assert_dockerfile_line("## Project: (unknown)")
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu16/builder AS app-build")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
     assert_dockerfile_line("ARG erlang_version=\"20.2\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
@@ -42,7 +42,7 @@ defmodule GeneratorTest do
     assert_dockerfile_line("# ENV NAME=\"value\"")
     assert_dockerfile_line("# ENV BUILD_CLOUDSQL_INSTANCES=\"my-project-id:db-region:db-name\"")
     refute_dockerfile_line("RUN mix release --env=prod --verbose")
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu16/asdf")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/asdf")
     assert_dockerfile_line("CMD exec mix run --no-halt")
   end
 
@@ -148,13 +148,13 @@ defmodule GeneratorTest do
         """
 
     run_generator("minimal", config)
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu16/builder AS app-build")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/builder AS app-build")
     assert_dockerfile_line("ARG erlang_version=\"20.2\"")
     assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
-    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu16")
+    assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18")
     assert_dockerfile_line("CMD [\"/app/bin/my_app\",\"foreground\"]")
   end
 
@@ -246,7 +246,7 @@ defmodule GeneratorTest do
     assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
 
     assert_dockerfile_line(
-      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu16/prebuilt/otp-20.2:latest"
+      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-20.2:latest"
     )
   end
 
@@ -263,7 +263,7 @@ defmodule GeneratorTest do
     assert_dockerfile_line("ARG elixir_version=\"1.5.3-otp-20\"")
 
     assert_dockerfile_line(
-      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu16/prebuilt/otp-20.2:latest"
+      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-20.2:latest"
     )
   end
 
@@ -302,9 +302,9 @@ defmodule GeneratorTest do
     opts = [
       workspace_dir: @tmp_dir,
       template_dir: @template_dir,
-      os_image: "gcr.io/gcp-elixir/runtime/ubuntu16",
-      asdf_image: "gcr.io/gcp-elixir/runtime/ubuntu16/asdf",
-      builder_image: "gcr.io/gcp-elixir/runtime/ubuntu16/builder",
+      os_image: "gcr.io/gcp-elixir/runtime/ubuntu18",
+      asdf_image: "gcr.io/gcp-elixir/runtime/ubuntu18/asdf",
+      builder_image: "gcr.io/gcp-elixir/runtime/ubuntu18/builder",
       default_erlang_version: "20.2",
       default_elixir_version: "1.5.3-otp-20"
     ]
@@ -316,7 +316,7 @@ defmodule GeneratorTest do
         prebuilt_erlang_versions
         |> String.split(",")
         |> Enum.reduce(opts, fn v, o ->
-          image = "#{v}=gcr.io/gcp-elixir/runtime/ubuntu16/prebuilt/otp-#{v}:latest"
+          image = "#{v}=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-#{v}:latest"
           [{:prebuilt_erlang_images, image} | o]
         end)
       end

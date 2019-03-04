@@ -253,13 +253,13 @@ The Elixir Runtime comprises three parts:
     be used directly by applications. They are all based on a stable version of
     Debian (the same Debian base image used by Google's officially supported
     runtimes).
-    *   `elixir-ubuntu16` contains an installation of Ubuntu 16.04 plus a few
+    *   `elixir-ubuntu18` contains an installation of Ubuntu 18.04 plus a few
         dependencies for the Erlang VM, and some common configuration for
         App Engine runtimes. However, it does not include an installation of
         Erlang or Elixir itself. This image is used as a runtime base image for
         release-based applications. An application release, with its embedded
         ERTS, is installed directly atop this image.
-    *   `elixir-asdf` extends `elixir-ubuntu16` by installing
+    *   `elixir-asdf` extends `elixir-ubuntu18` by installing
         [asdf](https://github.com/asdf-vm/asdf) and the erlang and elixir
         plugins, but does not include any actual installations. This image is
         used as a base image for most other images.
@@ -279,7 +279,7 @@ The Elixir Runtime comprises three parts:
     to build the Docker image that gets pushed to App Engine servers. The
     generated Dockerfile generally contains two stages: a build stage based on
     `elixir-builder` that performs the build, and a runtime stage based on
-    either `elixir-ubuntu16` (for release-based builds) or `elixir-asdf` (for
+    either `elixir-ubuntu18` (for release-based builds) or `elixir-asdf` (for
     non-release-based).
 *   A configuration file that references a specific build of the above
     analyzer-generator image. This file serves as the official definition of

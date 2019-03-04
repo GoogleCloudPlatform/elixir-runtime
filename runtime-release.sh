@@ -19,7 +19,7 @@ set -e
 
 DIRNAME=$(dirname $0)
 
-OS_NAME=ubuntu16
+OS_NAME=ubuntu18
 PROJECT=
 NAMESPACE=elixir
 IMAGE_TAG=staging
@@ -30,7 +30,7 @@ show_usage() {
   echo "Flags:" >&2
   echo '  -b <bucket>: promote the runtime definition in this gcs bucket (defaults to no promote)' >&2
   echo '  -n <namespace>: set the images namespace (defaults to `elixir`)' >&2
-  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu16`)' >&2
+  echo '  -o <osname>: build against the given os base image (defaults to `ubuntu18`)' >&2
   echo '  -p <project>: set the images project (defaults to current gcloud config setting)' >&2
   echo '  -t <tag>: the image tag to release (defaults to `staging`)' >&2
 }
