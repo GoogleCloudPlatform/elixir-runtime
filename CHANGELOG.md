@@ -9,9 +9,9 @@ choosing the following in your `app.yaml` config file:
 
 However, you may also pin to a specific version of the runtime by specifying
 the version name as the yaml file name. For example, to pin to the
-`elixir-2018-12-11-124828` release, use:
+`elixir-2019-01-19-000446` release, use:
 
-    runtime: gs://elixir-runtime/elixir-2018-12-11-124828.yaml
+    runtime: gs://elixir-runtime/elixir-2019-01-19-000446.yaml
 
 There is currently no guarantee regarding how long older runtime releases will
 continue to be supported. It is generally best not to pin to a specific
@@ -21,8 +21,13 @@ soon as possible.
 ## Unreleased
 
 * Updated the underlying OS from Ubuntu 16.04 (Xenial) to Ubuntu 18.04 (Bionic).
+* Prebuilt OTP 20.3 up to 20.3.8.20, and 21.2 up to 21.2.6.
+* Update default OTP to 21.2.6, and default Elixir to 18.1
+* Update asdf to 0.7.0.
+* Update gcloud to 236.0.0.
+* Update nodejs to 10.15.2.
 
-## elixir-2019-01-19-000446
+## elixir-2019-01-19-000446 (elixir-ubuntu16)
 
 * This is the last planned release on Ubuntu 16.04 (Xenial). Future releases will update to Ubuntu 18.04 (Bionic). To remain on Xenial, pin to this release by setting the runtime to `gs://elixir-runtime/elixir-ubuntu16.yaml`
 * Prebuilt OTP 20.3 up to 20.3.8.18, and 21.2 up to 21.2.3.
