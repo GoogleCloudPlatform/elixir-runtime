@@ -18,7 +18,7 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## Unreleased
+## elixir-2019-03-04-150411
 
 * Updated the underlying OS from Ubuntu 16.04 (Xenial) to Ubuntu 18.04 (Bionic).
 * Prebuilt OTP 20.3 up to 20.3.8.20, and 21.2 up to 21.2.6.
