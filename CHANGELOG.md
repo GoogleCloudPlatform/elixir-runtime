@@ -22,7 +22,7 @@ soon as possible.
 
 * Updated the underlying OS from Ubuntu 16.04 (Xenial) to Ubuntu 18.04 (Bionic).
 * Prebuilt OTP 20.3 up to 20.3.8.20, and 21.2 up to 21.2.6.
-* Update default OTP to 21.2.6, and default Elixir to 18.1
+* Update default OTP to 21.2.6, and default Elixir to 1.8.1
 * Update asdf to 0.7.0.
 * Update gcloud to 236.0.0.
 * Update nodejs to 10.15.2.
