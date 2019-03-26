@@ -18,6 +18,12 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2019-03-21-181846
+
+* Prebuilt OTP 21.2 up to 21.2.7, and 21.3 up to 21.3.2.
+* Update default OTP to 21.3.2.
+* Update gcloud to 239.0.0.
+
 ## elixir-2019-03-04-150411
 
 * Updated the underlying OS from Ubuntu 16.04 (Xenial) to Ubuntu 18.04 (Bionic).
