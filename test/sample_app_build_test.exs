@@ -16,7 +16,7 @@ defmodule SampleAppBuildTest do
   use ExUnit.Case
   import TestHelper
 
-  @moduletag timeout: 120_000
+  @moduletag timeout: 300_000
 
   test "Minimal plug app" do
     config = """
@@ -44,7 +44,7 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.6\.6},
+          ~r{1\.7\.4},
           show: true
         )
       end
@@ -71,7 +71,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.6.6",
+          "1.7.4",
           timeout: 10,
           show: true,
           verbose: true
@@ -122,7 +122,7 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.8\.1},
+          ~r{1\.8\.2},
           show: true
         )
       end
@@ -149,7 +149,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.8.1",
+          "1.8.2",
           timeout: 10,
           show: true,
           verbose: true
