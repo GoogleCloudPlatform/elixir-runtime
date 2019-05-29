@@ -18,6 +18,13 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2019-05-28-222238
+
+* Prebuilt OTP through 21.3.7.1, 21.3.8.2, and 22.0.1.
+* Update default OTP to 21.3.8.2, and default Elixir to 1.8.2.
+* Update default gcloud to 247.0.0.
+* Update asdf to 0.7.2
+
 ## elixir-2019-04-19-135626
 
 * Prebuilt OTP 20.3.8.21, and 21.3.3 thru 21.3.6.
