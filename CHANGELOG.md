@@ -9,16 +9,16 @@ choosing the following in your `app.yaml` config file:
 
 However, you may also pin to a specific version of the runtime by specifying
 the version name as the yaml file name. For example, to pin to the
-`elixir-2019-05-28-222238` release, use:
+`elixir-2019-07-01-065508` release, use:
 
-    runtime: gs://elixir-runtime/elixir-2019-05-28-222238.yaml
+    runtime: gs://elixir-runtime/elixir-2019-07-01-065508.yaml
 
 There is currently no guarantee regarding how long older runtime releases will
 continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## (unreleased)
+## elixir-2019-07-18-112708
 
 * Supports building releases using the built-in mix release in elixir 1.9.
 * Supports the usage changes in distillery 2.1.

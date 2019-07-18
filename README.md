@@ -29,12 +29,14 @@ You may consider deploying your Elixir application to Google App Engine if:
 You should consider a different hosting solution such as, e.g.,
 [Google Kubernetes Engine](https://cloud.google.com/kubernetes-engine/) if:
 
-*   Your application uses websockets, as this feature is not yet supported by
-    Google App Engine.
 *   Your application uses Erlang's hot upgrade feature because it stores
     critical state in long-running processes. App Engine is designed for
     "stateless" apps that use a separate store such as a database for long-term
     state.
+
+Elixir support is specific to the
+[flexible environment](https://cloud.google.com/appengine/docs/flexible/) of
+App Engine. The standard environment does not currently support Elixir.
 
 ## Using the Elixir Runtime
 
@@ -56,12 +58,15 @@ need a Google Cloud project with billing enabled, and you must have the
 necessary with gcloud 175.0.0 and later, and you should now remove this config
 if you currently have it.)
 
-### Configuring an app with Distillery releases
+### Configuring an app with releases
 
-Generally, we recommend that you set up releases for your application using
-[Distillery](https://github.com/bitwalker/distillery). Releases are the
-community's standard way to package and deploy your code, and they also help
-optimize the size and performance of your deployed application.
+Generally, we recommend that you set up releases for your application. Releases
+are the community's standard way to package and deploy your code, and they also
+help optimize the size and performance of your deployed application. Releases
+can be built using the
+[mix release](https://elixir-lang.org/getting-started/mix-otp/config-and-releases.html#releases)
+feature of Elixir 1.9 or later, or using the
+[Distillery](https://github.com/bitwalker/distillery) package.
 
 If your application uses releases, the Elixir Runtime will build a release
 automatically, in the `:prod` environment, when you deploy to App Engine.
@@ -70,8 +75,8 @@ runtime is included. The release will be built in the cloud on the same OS and
 architecture that it will run on, so you do not need to worry about
 cross-compilation.
 
-Once you have configured Distillery, create a file called `app.yaml` at the
-root of your application directory, with the following contents:
+Once you have configured releases, create a file called `app.yaml` at the root
+of your application directory, with the following contents:
 
     env: flex
     runtime: gs://elixir-runtime/elixir.yaml
@@ -90,8 +95,8 @@ will still apply.
 ### Configuring an app without releases
 
 The Elixir Runtime also supports deploying an application that does not build
-releases. If your app does not use Distillery, create a file called `app.yaml`
-at the root of your application directory, with the following contents:
+releases. If your app does not use releases, create a file called `app.yaml` at
+the root of your application directory, with the following contents:
 
     env: flex
     runtime: gs://elixir-runtime/elixir.yaml
@@ -159,17 +164,23 @@ corresponding clause for the environment in your `rel/config.exs` file.)
 
 The Elixir Runtime uses the [asdf](https://github.com/asdf-vm/asdf) tool to
 install and manage Erlang and Elixir. By default, it will run your application
-on recent stable releases of those languages. However, you may specify which
-versions to use by providing a `.tool-versions` file with versions for `erlang`
-and `elixir`. See the [asdf](https://github.com/asdf-vm/asdf) documentation for
-more information on the format of the `.tool-versions` file.
+on recent stable releases of those languages. However, the default versions may
+change at any time, and indeed may depend on the type of application. (For
+example, as of July 2019, the default Elixir version for most applications is
+1.9.0, except if the application uses a version of Distillery prior to 2.1, in
+which case it defaults to 1.8.2 to avoid mix task collisions.)
+
+If you need more stability in the language versions used, you may provide a
+`.tool-versions` file with versions for `erlang` and `elixir`. See the
+[asdf](https://github.com/asdf-vm/asdf) documentation for more information on
+the format of the `.tool-versions` file.
 
 When you deploy an Elixir application, the Elixir runtime will install the
 requested releases of Erlang and Elixir into your application image
 "just-in-time". In most cases, this is pretty quick. Asdf installs Elixir
 directly from precompiled binaries hosted on hex.pm. For Erlang, the Elixir
-Runtime itself provides prebuilt binaries of recent versions of Erlang since
-Erlang 17, and can install any of these directly.
+Runtime itself provides prebuilt binaries of most recent versions of Erlang
+since Erlang 20, and can install any of these directly.
 
 However, if you request an Erlang version for which we do not have a prebuilt
 binary, the Elixir runtime will have to build Erlang from source. This can
@@ -187,7 +198,7 @@ is not explicitly set, it defaults to 10 minutes.
 
 The Elixir Runtime provides a standard build script that includes installation
 of Erlang and Elixir, fetching dependencies, compiling your application, and
-(for release-based applications) building the release using Distillery.
+(for release-based applications) building the release.
 
 There is also a space for custom build commands that are executed after
 compilation but before release generation. Your application might use this
