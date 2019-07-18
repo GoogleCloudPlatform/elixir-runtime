@@ -257,7 +257,11 @@ defmodule GeneratorTest do
           release_app: blog
         """
 
-    run_generator("phoenix_1_3", config: config, tool_versions: "erlang 21.1\nelixir 1.7.4-otp-21\n")
+    run_generator("phoenix_1_3",
+      config: config,
+      tool_versions: "erlang 21.1\nelixir 1.7.4-otp-21\n"
+    )
+
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.7.4-otp-21\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
@@ -285,7 +289,11 @@ defmodule GeneratorTest do
           release_app: blog
         """
 
-    run_generator("phoenix_umbrella_1_3", config: config, tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n")
+    run_generator("phoenix_umbrella_1_3",
+      config: config,
+      tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n"
+    )
+
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-21\"")
     assert_dockerfile_line("RUN mix release blog")
@@ -328,7 +336,11 @@ defmodule GeneratorTest do
           release_app: blog
         """
 
-    run_generator("phoenix_1_4", config: config, tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n")
+    run_generator("phoenix_1_4",
+      config: config,
+      tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n"
+    )
+
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-21\"")
     assert_dockerfile_line("RUN mix distillery.release --env=prod --verbose")

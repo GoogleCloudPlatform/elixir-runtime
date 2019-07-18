@@ -199,10 +199,12 @@ defmodule SampleAppBuildTest do
       config: config,
       postprocess_dir: fn dir ->
         config_path = Path.join([dir, "rel", "config.exs"])
+
         str =
           config_path
           |> File.read!()
           |> String.replace("Distillery.Releases.Config", "Mix.Releases.Config")
+
         File.write!(config_path, str)
         File.rename!(Path.join(dir, "mix-dist20.exs"), Path.join(dir, "mix.exs"))
         File.rename!(Path.join(dir, "mix-dist20.lock"), Path.join(dir, "mix.lock"))
@@ -228,9 +230,9 @@ defmodule SampleAppBuildTest do
   @apps_dir Path.join(__DIR__, "sample_apps")
   @tmp_dir Path.join(__DIR__, "tmp")
   @default_config """
-    env: flex
-    runtime: elixir
-    """
+  env: flex
+  runtime: elixir
+  """
 
   def run_app_test(app_name, opts \\ []) do
     check_container = Keyword.get(opts, :check_container, nil)

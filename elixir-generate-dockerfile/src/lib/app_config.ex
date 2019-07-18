@@ -67,7 +67,15 @@ defmodule GenerateDockerfile.AppConfig do
       default_erlang_version = Keyword.fetch!(args, :default_erlang_version)
       default_elixir_version = Keyword.fetch!(args, :default_elixir_version)
       old_distillery_elixir_version = Keyword.fetch!(args, :old_distillery_elixir_version)
-      data = build_data(workspace_dir, default_erlang_version, default_elixir_version, old_distillery_elixir_version)
+
+      data =
+        build_data(
+          workspace_dir,
+          default_erlang_version,
+          default_elixir_version,
+          old_distillery_elixir_version
+        )
+
       {:ok, data}
     catch
       {:usage_error, message} -> {:ok, %{error: message}}
@@ -78,7 +86,12 @@ defmodule GenerateDockerfile.AppConfig do
     {:reply, Map.fetch(data, key), data}
   end
 
-  defp build_data(workspace_dir, default_erlang_version, default_elixir_version, old_distillery_elixir_version) do
+  defp build_data(
+         workspace_dir,
+         default_erlang_version,
+         default_elixir_version,
+         old_distillery_elixir_version
+       ) do
     project_id = get_project()
     project_id_for_display = project_id || "(unknown)"
     project_id_for_example = project_id || "my-project-id"
@@ -88,7 +101,13 @@ defmodule GenerateDockerfile.AppConfig do
     phoenix_version = Map.get(deps_info, :phoenix)
     phoenix_prefix = get_phoenix_prefix(phoenix_version)
 
-    default_elixir_version = adjust_default_elixir_version(default_elixir_version, old_distillery_elixir_version, distillery_version)
+    default_elixir_version =
+      adjust_default_elixir_version(
+        default_elixir_version,
+        old_distillery_elixir_version,
+        distillery_version
+      )
+
     {erlang_version, elixir_version} =
       get_tool_versions(workspace_dir, default_erlang_version, default_elixir_version)
 
@@ -103,7 +122,10 @@ defmodule GenerateDockerfile.AppConfig do
     mix_env = Map.get(env_variables, "MIX_ENV", @default_mix_env)
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
-    entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, distillery_version, release_app)
+
+    entrypoint =
+      get_entrypoint(runtime_config, app_config, phoenix_prefix, distillery_version, release_app)
+
     assets_dir = get_assets_dir(workspace_dir, phoenix_version)
     assets_builder = get_assets_builder(workspace_dir, assets_dir)
     build_scripts = get_build_scripts(runtime_config, assets_dir, assets_builder, phoenix_prefix)
@@ -194,7 +216,11 @@ defmodule GenerateDockerfile.AppConfig do
     default_elixir_version
   end
 
-  defp adjust_default_elixir_version(default_elixir_version, old_distillery_elixir_version, distillery_version) do
+  defp adjust_default_elixir_version(
+         default_elixir_version,
+         old_distillery_elixir_version,
+         distillery_version
+       ) do
     if Version.compare(distillery_version, "2.1.0") == :lt do
       old_distillery_elixir_version
     else

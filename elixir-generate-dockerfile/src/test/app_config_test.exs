@@ -243,6 +243,7 @@ defmodule AppConfigTest do
     runtime_config:
       release_app: my_app
     """
+
     pid = AppConfigTest.setup_test("phoenix_1_4", config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "[\"/app/bin/my_app\",\"foreground\"]"
