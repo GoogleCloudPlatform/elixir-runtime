@@ -27,7 +27,7 @@ defmodule GeneratorTest do
   """
 
   test "minimal directory with minimal config" do
-    run_generator("minimal", @minimal_config)
+    run_generator("minimal")
     assert_ignore_line("Dockerfile")
     refute_ignore_line("priv/static")
     refute_file_contents(Path.join(@tmp_dir, ".dockerignore"), ~r{node_modules}m)
@@ -53,12 +53,12 @@ defmodule GeneratorTest do
         service: elixir_app
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("## Service: elixir_app")
   end
 
   test "minimal directory with custom project" do
-    run_generator("minimal", @minimal_config, project: "actual-project")
+    run_generator("minimal", project: "actual-project")
     assert_dockerfile_line("## Project: actual-project")
     assert_dockerfile_line("RUN gcloud config set project actual-project")
   end
@@ -70,7 +70,7 @@ defmodule GeneratorTest do
         entrypoint: my-entrypoint.sh
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("CMD exec my-entrypoint.sh")
   end
 
@@ -84,7 +84,7 @@ defmodule GeneratorTest do
           VAR3: 123
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
 
     expected = """
     ENV VAR1="value1" \\
@@ -105,7 +105,7 @@ defmodule GeneratorTest do
             - instance3
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
 
     assert_dockerfile_line(
       "ENV BUILD_CLOUDSQL_INSTANCES=\"cloud-sql-instance-name,instance2:hi:there,instance3\""
@@ -122,7 +122,7 @@ defmodule GeneratorTest do
             - brunch build
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("RUN npm install")
     assert_dockerfile_line("RUN brunch build")
   end
@@ -135,7 +135,7 @@ defmodule GeneratorTest do
           packages: libgeos
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("    && apt-get install -y -q libgeos")
   end
 
@@ -147,7 +147,7 @@ defmodule GeneratorTest do
           release_app: my_app
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/builder AS app-build")
     assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
     assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
@@ -167,7 +167,7 @@ defmodule GeneratorTest do
         entrypoint: /app/bin/my_app start --blah
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("RUN mix release my_app")
     assert_dockerfile_line("CMD exec /app/bin/my_app start --blah")
   end
@@ -182,21 +182,31 @@ defmodule GeneratorTest do
           MIX_ENV: staging
         """
 
-    run_generator("minimal", config)
+    run_generator("minimal", config: config)
     assert_dockerfile_line("RUN mix release my_app")
     assert_dockerfile_line("COPY --from=app-build /app/_build/staging/rel/my_app /app/")
   end
 
   test "phoenix 1.2 directory" do
-    run_generator("phoenix_1_2", @minimal_config)
+    run_generator("phoenix_1_2")
     assert_ignore_line("priv/static")
     assert_ignore_line("node_modules")
     refute_dockerfile_line("RUN mix release")
     refute_dockerfile_line("RUN mix distillery.release")
   end
 
+  test "phoenix 1.3 directory with default elixir" do
+    run_generator("phoenix_1_3")
+    assert_ignore_line("priv/static")
+    assert_ignore_line("assets/node_modules")
+    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-22\"")
+    refute_dockerfile_line("RUN mix release")
+    refute_dockerfile_line("RUN mix distillery.release")
+  end
+
   test "phoenix 1.3 directory with custom elixir" do
-    run_generator("phoenix_1_3", @minimal_config)
+    run_generator("phoenix_1_3", tool_versions: "erlang 21.1\nelixir 1.7.4-otp-21\n")
     assert_ignore_line("priv/static")
     assert_ignore_line("assets/node_modules")
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
@@ -205,14 +215,38 @@ defmodule GeneratorTest do
     refute_dockerfile_line("RUN mix distillery.release")
   end
 
-  test "phoenix umbrella 1.3 directory with custom erlang and elixir" do
-    run_generator("phoenix_umbrella_1_3", @minimal_config)
+  test "phoenix umbrella 1.3 directory with default elixir" do
+    run_generator("phoenix_umbrella_1_3")
+    assert_ignore_line("priv/static")
+    assert_ignore_line("apps/blog_web/assets/node_modules")
+    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    refute_dockerfile_line("RUN mix release")
+    refute_dockerfile_line("RUN mix distillery.release")
+  end
+
+  test "phoenix umbrella 1.3 directory with custom elixir" do
+    run_generator("phoenix_umbrella_1_3", tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n")
     assert_ignore_line("priv/static")
     assert_ignore_line("apps/blog_web/assets/node_modules")
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-21\"")
     refute_dockerfile_line("RUN mix release")
     refute_dockerfile_line("RUN mix distillery.release")
+  end
+
+  test "phoenix 1.3 directory with release app and default elixir" do
+    config =
+      @minimal_config <>
+        """
+        runtime_config:
+          release_app: blog
+        """
+
+    run_generator("phoenix_1_3", config: config)
+    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-22\"")
+    assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
   test "phoenix 1.3 directory with release app and custom elixir" do
@@ -223,13 +257,13 @@ defmodule GeneratorTest do
           release_app: blog
         """
 
-    run_generator("phoenix_1_3", config)
+    run_generator("phoenix_1_3", config: config, tool_versions: "erlang 21.1\nelixir 1.7.4-otp-21\n")
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.7.4-otp-21\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
-  test "phoenix umbrella 1.3 directory with release app and custom erlang and elixir" do
+  test "phoenix umbrella 1.3 directory with release app and default elixir" do
     config =
       @minimal_config <>
         """
@@ -237,7 +271,21 @@ defmodule GeneratorTest do
           release_app: blog
         """
 
-    run_generator("phoenix_umbrella_1_3", config)
+    run_generator("phoenix_umbrella_1_3", config: config)
+    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("RUN mix release blog")
+  end
+
+  test "phoenix umbrella 1.3 directory with release app and custom elixir" do
+    config =
+      @minimal_config <>
+        """
+        runtime_config:
+          release_app: blog
+        """
+
+    run_generator("phoenix_umbrella_1_3", config: config, tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n")
     assert_dockerfile_line("ARG erlang_version=\"21.1\"")
     assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-21\"")
     assert_dockerfile_line("RUN mix release blog")
@@ -253,9 +301,37 @@ defmodule GeneratorTest do
           MIX_ENV: staging
         """
 
-    run_generator("phoenix_1_3", config)
+    run_generator("phoenix_1_3", config: config)
     assert_dockerfile_line("RUN mix release --env=staging --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/staging/rel/blog /app/")
+  end
+
+  test "phoenix 1.4 directory with release app and default elixir" do
+    config =
+      @minimal_config <>
+        """
+        runtime_config:
+          release_app: blog
+        """
+
+    run_generator("phoenix_1_4", config: config)
+    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("RUN mix distillery.release --env=prod --verbose")
+  end
+
+  test "phoenix 1.4 directory with release app and custom elixir" do
+    config =
+      @minimal_config <>
+        """
+        runtime_config:
+          release_app: blog
+        """
+
+    run_generator("phoenix_1_4", config: config, tool_versions: "erlang 21.1\nelixir 1.8.2-otp-21\n")
+    assert_dockerfile_line("ARG erlang_version=\"21.1\"")
+    assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-21\"")
+    assert_dockerfile_line("RUN mix distillery.release --env=prod --verbose")
   end
 
   test "phoenix 1.4 directory with release app and custom mix_env" do
@@ -268,13 +344,13 @@ defmodule GeneratorTest do
           MIX_ENV: staging
         """
 
-    run_generator("phoenix_1_4", config)
+    run_generator("phoenix_1_4", config: config)
     assert_dockerfile_line("RUN mix distillery.release --env=staging --verbose")
     assert_dockerfile_line("COPY --from=app-build /app/_build/staging/rel/blog /app/")
   end
 
   test "minimal directory with prebuilt erlang" do
-    run_generator("minimal", @minimal_config, prebuilt_erlang_versions: "22.0.7")
+    run_generator("minimal", prebuilt_erlang_versions: "22.0.7")
     assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
     assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
 
@@ -291,7 +367,7 @@ defmodule GeneratorTest do
           release_app: my_app
         """
 
-    run_generator("minimal", config, prebuilt_erlang_versions: "22.0.7")
+    run_generator("minimal", config: config, prebuilt_erlang_versions: "22.0.7")
     assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
     assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
 
@@ -300,10 +376,12 @@ defmodule GeneratorTest do
     )
   end
 
-  defp run_generator(dir, config, args \\ []) do
+  defp run_generator(dir, args \\ []) do
     config_file = Keyword.get(args, :config_file, nil)
     project = Keyword.get(args, :project, nil)
     prebuilt_erlang_versions = Keyword.get(args, :prebuilt_erlang_versions, "")
+    config = Keyword.get(args, :config, @minimal_config)
+    tool_versions = Keyword.get(args, :tool_versions, nil)
 
     File.rm_rf!(@tmp_dir)
 
@@ -332,6 +410,12 @@ defmodule GeneratorTest do
       |> File.write!(config)
     end
 
+    if tool_versions do
+      @tmp_dir
+      |> Path.join(".tool-versions")
+      |> File.write!(tool_versions)
+    end
+
     opts = [
       workspace_dir: @tmp_dir,
       template_dir: @template_dir,
@@ -339,7 +423,8 @@ defmodule GeneratorTest do
       asdf_image: "gcr.io/gcp-elixir/runtime/ubuntu18/asdf",
       builder_image: "gcr.io/gcp-elixir/runtime/ubuntu18/builder",
       default_erlang_version: "22.0.7",
-      default_elixir_version: "1.9.0-otp-22"
+      default_elixir_version: "1.9.0-otp-22",
+      old_distillery_elixir_version: "1.8.2-otp-22"
     ]
 
     opts =

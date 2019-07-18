@@ -25,6 +25,7 @@ defmodule SampleAppBuildTest do
   test "Minimal phoenix app" do
     run_app_test(
       "minimal_phoenix",
+      tool_versions: "elixir 1.8.2-otp-22\n",
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
@@ -40,7 +41,6 @@ defmodule SampleAppBuildTest do
     )
   end
 
-  @tag meme: true
   test "Minimal phoenix app with release" do
     config = """
     env: flex
@@ -51,6 +51,7 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix",
+      tool_versions: "elixir 1.8.2-otp-22\n",
       config: config,
       check_image: fn image ->
         assert_cmd_succeeds(
@@ -79,10 +80,14 @@ defmodule SampleAppBuildTest do
     entrypoint: MIX_ENV=staging mix phx.server
     """
 
-    run_app_test("minimal_phoenix", config: config, expected_output: ~r{from staging})
+    run_app_test(
+      "minimal_phoenix",
+      tool_versions: "elixir 1.8.2-otp-22\n",
+      config: config,
+      expected_output: ~r{from staging}
+    )
   end
 
-  @tag meme: true
   test "Minimal phoenix app with release in staging environment" do
     config = """
     env: flex
@@ -93,7 +98,12 @@ defmodule SampleAppBuildTest do
       MIX_ENV: staging
     """
 
-    run_app_test("minimal_phoenix", config: config, expected_output: ~r{from staging})
+    run_app_test(
+      "minimal_phoenix",
+      tool_versions: "elixir 1.8.2-otp-22\n",
+      config: config,
+      expected_output: ~r{from staging}
+    )
   end
 
   test "Minimal phoenix 1.4 app" do
@@ -187,7 +197,6 @@ defmodule SampleAppBuildTest do
     run_app_test(
       "minimal_phoenix14",
       config: config,
-      tool_versions: "elixir 1.8.2-otp-22\n",
       postprocess_dir: fn dir ->
         config_path = Path.join([dir, "rel", "config.exs"])
         str =
@@ -246,7 +255,7 @@ defmodule SampleAppBuildTest do
       |> Path.join(".tool-versions")
       |> File.write!(tool_versions)
     end
-    
+
     if postprocess_dir != nil, do: postprocess_dir.(@tmp_dir)
 
     assert_cmd_succeeds(

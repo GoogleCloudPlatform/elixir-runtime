@@ -27,6 +27,7 @@ defmodule GenerateDockerfile do
           prebuilt_erlang_images: :keep,
           default_erlang_version: :string,
           default_elixir_version: :string,
+          old_distillery_elixir_version: :string,
           template_dir: :string
         ],
         aliases: [p: :prebuilt_erlang_images]

@@ -22,7 +22,7 @@ soon as possible.
 
 * Supports building releases using the built-in mix release in elixir 1.9.
 * Supports the usage changes in distillery 2.1.
-* Update default elixir to 1.9.0.
+* Update default elixir to 1.9.0, unless pre-2.1 distillery is in use in which case it remains on 1.8.2.
 * Update default OTP to 22.0.7.
 * Prebuilt OTP through 21.3.8.6 and 22.0.7.
 * Removed intermediate OTP 20.x versions from the prebuilt list. (The primary and latest versions are still present.)

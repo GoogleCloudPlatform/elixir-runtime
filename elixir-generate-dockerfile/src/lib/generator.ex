@@ -47,6 +47,9 @@ defmodule GenerateDockerfile.Generator do
     default_elixir_version =
       Keyword.get(opts, :default_elixir_version, System.get_env("DEFAULT_ELIXIR_VERSION"))
 
+    old_distillery_elixir_version =
+      Keyword.get(opts, :old_distillery_elixir_version, System.get_env("OLD_DISTILLERY_ELIXIR_VERSION"))
+
     prebuilt_erlang_images =
       Keyword.get_values(opts, :prebuilt_erlang_images) ++
         case System.get_env("DEFAULT_PREBUILT_ERLANG_IMAGES") do
@@ -61,7 +64,7 @@ defmodule GenerateDockerfile.Generator do
       |> Path.expand()
 
     File.cd!(workspace_dir, fn ->
-      start_app_config(workspace_dir, default_erlang_version, default_elixir_version)
+      start_app_config(workspace_dir, default_erlang_version, default_elixir_version, old_distillery_elixir_version)
 
       assigns =
         build_assigns(
@@ -79,20 +82,25 @@ defmodule GenerateDockerfile.Generator do
     :ok
   end
 
-  defp start_app_config(_workspace_dir, "", _default_elixir_version) do
+  defp start_app_config(_workspace_dir, "", _default_elixir_version, _old_distillery_elixir_version) do
     GenerateDockerfile.error("Missing default erlang version")
   end
 
-  defp start_app_config(_workspace_dir, _default_erlang_version, "") do
+  defp start_app_config(_workspace_dir, _default_erlang_version, "", _old_distillery_elixir_version) do
     GenerateDockerfile.error("Missing default elixir version")
   end
 
-  defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version) do
+  defp start_app_config(_workspace_dir, _default_erlang_version, _default_elixir_version, "") do
+    GenerateDockerfile.error("Missing default elixir version for old distillery")
+  end
+
+  defp start_app_config(workspace_dir, default_erlang_version, default_elixir_version, old_distillery_elixir_version) do
     {:ok, _} =
       AppConfig.start_link(
         workspace_dir: workspace_dir,
         default_erlang_version: default_erlang_version,
-        default_elixir_version: default_elixir_version
+        default_elixir_version: default_elixir_version,
+        old_distillery_elixir_version: old_distillery_elixir_version
       )
 
     case AppConfig.status() do

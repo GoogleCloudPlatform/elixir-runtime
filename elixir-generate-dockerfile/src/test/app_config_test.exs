@@ -21,6 +21,7 @@ defmodule AppConfigTest do
   @tmp_dir Path.join(@test_dir, "tmp")
   @default_erlang_version "22.0.7"
   @default_elixir_version "1.9.0-otp-22"
+  @old_distillery_elixir_version "1.8.2-otp-22"
 
   @minimal_config """
   env: flex
@@ -63,6 +64,7 @@ defmodule AppConfigTest do
         workspace_dir: @tmp_dir,
         default_erlang_version: @default_erlang_version,
         default_elixir_version: @default_elixir_version,
+        old_distillery_elixir_version: @old_distillery_elixir_version,
         register_module: false
       )
 
@@ -231,7 +233,7 @@ defmodule AppConfigTest do
            ]
 
     assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
+    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
   end
 
   test "phoenix 1.4 with release" do
@@ -253,7 +255,7 @@ defmodule AppConfigTest do
            ]
 
     assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
+    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
   end
 
   test "phoenix 1.3 defaults" do
@@ -268,8 +270,8 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "21.1"
-    assert AppConfig.get!(:elixir_version, pid) == "1.7.4-otp-21"
+    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
+    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
   end
 
   test "phoenix umbrella 1.3 defaults" do
@@ -284,8 +286,8 @@ defmodule AppConfigTest do
              "cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "21.1"
-    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-21"
+    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
+    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
   end
 
   test "phoenix 1.2 defaults" do

@@ -23,6 +23,7 @@ defmodule Mix.Tasks.BuildLocalImages do
   @prebuilt_erlang_versions ["22.0.7"]
   @base_erlang_version "22.0.7"
   @base_elixir_version "1.9.0-otp-22"
+  @old_distillery_elixir_version "1.8.2-otp-22"
   @asdf_version "0.7.3"
   @nodejs_version "10.16.0"
   @gcloud_version "253.0.0"
@@ -187,6 +188,8 @@ defmodule Mix.Tasks.BuildLocalImages do
             "default_erlang_version=#{@base_erlang_version}",
             "--build-arg",
             "default_elixir_version=#{@base_elixir_version}",
+            "--build-arg",
+            "old_distillery_elixir_version=#{@old_distillery_elixir_version}",
             "."
           ],
           into: IO.stream(:stdio, :line)
