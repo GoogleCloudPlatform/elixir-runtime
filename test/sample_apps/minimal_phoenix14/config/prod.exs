@@ -1,7 +1,8 @@
 use Mix.Config
 
 config :minimal_phoenix14, MinimalPhoenix14Web.Endpoint,
-  http: [:inet6, port: System.get_env("PORT") || 4000],
+  load_from_system_env: true,
+  http: [:inet6, port: {:system, "PORT"}],
   url: [host: "example.com", port: 80],
   cache_static_manifest: "priv/static/cache_manifest.json"
 

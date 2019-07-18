@@ -3,7 +3,6 @@ defmodule MinimalPhoenix14.MixProject do
 
   def project do
     [
-      releases: releases(),
       app: :minimal_phoenix14,
       version: "0.1.0",
       elixir: "~> 1.9",
@@ -32,17 +31,8 @@ defmodule MinimalPhoenix14.MixProject do
       {:phoenix_live_reload, "~> 1.2", only: :dev},
       {:gettext, "~> 0.11"},
       {:jason, "~> 1.0"},
-      {:plug_cowboy, "~> 2.0"}
-    ]
-  end
-  
-  defp releases do
-    [
-      minimal_phoenix14: [
-        include_erts: true,
-        include_executables_for: [:unix],
-        applications: [runtime_tools: :permanent]
-      ]
+      {:plug_cowboy, "~> 2.0"},
+      {:distillery, "~> 2.1.0"}
     ]
   end
 end

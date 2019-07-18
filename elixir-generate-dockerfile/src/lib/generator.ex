@@ -120,6 +120,9 @@ defmodule GenerateDockerfile.Generator do
         end
       end)
 
+    release_command = render_release_command(
+      AppConfig.get!(:distillery_version), AppConfig.get!(:mix_env), AppConfig.get!(:release_app))
+
     [
       os_image: os_image,
       asdf_image: asdf_image,
@@ -139,6 +142,7 @@ defmodule GenerateDockerfile.Generator do
       env_variables: AppConfig.get!(:env_variables) |> render_env,
       mix_env: AppConfig.get!(:mix_env),
       cloud_sql_instances: AppConfig.get!(:cloud_sql_instances) |> Enum.join(","),
+      release_command: release_command,
       build_scripts: AppConfig.get!(:build_scripts) |> render_commands,
       entrypoint: AppConfig.get!(:entrypoint)
     ]
@@ -180,6 +184,18 @@ defmodule GenerateDockerfile.Generator do
       "#{key}=\"#{escape_quoted(value)}\""
     end)
     |> Enum.join(" \\\n    ")
+  end
+
+  defp render_release_command(nil, _mix_env, release_app) do
+    "mix release #{release_app}"
+  end
+
+  defp render_release_command(distillery_version, mix_env, _release_app) do
+    if Version.compare(distillery_version, "2.1.0") == :lt do
+      "mix release --env=#{mix_env} --verbose"
+    else
+      "mix distillery.release --env=#{mix_env} --verbose"
+    end
   end
 
   defp render_commands(cmds) do

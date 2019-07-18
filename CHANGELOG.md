@@ -18,6 +18,17 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## (unreleased)
+
+* Supports building releases using the built-in mix release in elixir 1.9.
+* Supports the usage changes in distillery 2.1.
+* Update default elixir to 1.9.0.
+* Update default OTP to 22.0.7.
+* Prebuilt OTP through 21.3.8.6 and 22.0.7.
+* Removed intermediate OTP 20.x versions from the prebuilt list. (The primary and latest versions are still present.)
+* Update default gcloud to 253.0.0.
+* Update asdf to 0.7.3.
+
 ## elixir-2019-07-01-065508
 
 * Prebuilt OTP through 21.3.8.4 and 22.0.4.

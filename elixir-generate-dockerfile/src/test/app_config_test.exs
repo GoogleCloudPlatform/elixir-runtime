@@ -19,8 +19,8 @@ defmodule AppConfigTest do
   @test_dir __DIR__
   @cases_dir Path.join(@test_dir, "app_config")
   @tmp_dir Path.join(@test_dir, "tmp")
-  @default_erlang_version "20.2"
-  @default_elixir_version "1.5.3-otp-20"
+  @default_erlang_version "22.0.7"
+  @default_elixir_version "1.9.0-otp-22"
 
   @minimal_config """
   env: flex
@@ -164,7 +164,7 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("minimal", config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:release_app, pid) == "my_app"
-    assert AppConfig.get!(:entrypoint, pid) == "[\"/app/bin/my_app\",\"foreground\"]"
+    assert AppConfig.get!(:entrypoint, pid) == "[\"/app/bin/my_app\",\"start\"]"
   end
 
   test "release_app with custom entrypoint" do
@@ -222,7 +222,7 @@ defmodule AppConfigTest do
     pid = AppConfigTest.setup_test("phoenix_1_4", @minimal_config)
     assert AppConfig.status(pid) == :ok
     assert AppConfig.get!(:entrypoint, pid) == "exec mix phx.server"
-    assert AppConfig.get!(:phoenix_version, pid) == "1.4.0"
+    assert AppConfig.get!(:phoenix_version, pid) == "1.4.9"
     assert AppConfig.get!(:assets_dir, pid) == "assets"
     assert AppConfig.get!(:assets_builder, pid) == "webpack"
 
@@ -230,8 +230,30 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/webpack/bin/webpack.js --mode production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "21.1"
-    assert AppConfig.get!(:elixir_version, pid) == "1.7.4-otp-21"
+    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
+    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
+  end
+
+  test "phoenix 1.4 with release" do
+    config = """
+    env: flex
+    runtime: gs://elixir-runtime/elixir.yaml
+    runtime_config:
+      release_app: my_app
+    """
+    pid = AppConfigTest.setup_test("phoenix_1_4", config)
+    assert AppConfig.status(pid) == :ok
+    assert AppConfig.get!(:entrypoint, pid) == "[\"/app/bin/my_app\",\"foreground\"]"
+    assert AppConfig.get!(:phoenix_version, pid) == "1.4.9"
+    assert AppConfig.get!(:assets_dir, pid) == "assets"
+    assert AppConfig.get!(:assets_builder, pid) == "webpack"
+
+    assert AppConfig.get!(:build_scripts, pid) == [
+             "cd assets && npm install && node_modules/webpack/bin/webpack.js --mode production && cd .. && mix phx.digest"
+           ]
+
+    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
+    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
   end
 
   test "phoenix 1.3 defaults" do
@@ -246,8 +268,8 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
-    assert AppConfig.get!(:elixir_version, pid) == "1.5.1"
+    assert AppConfig.get!(:erlang_version, pid) == "21.1"
+    assert AppConfig.get!(:elixir_version, pid) == "1.7.4-otp-21"
   end
 
   test "phoenix umbrella 1.3 defaults" do
@@ -262,8 +284,8 @@ defmodule AppConfigTest do
              "cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "20.0"
-    assert AppConfig.get!(:elixir_version, pid) == "1.5.1-otp-20"
+    assert AppConfig.get!(:erlang_version, pid) == "21.1"
+    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-21"
   end
 
   test "phoenix 1.2 defaults" do

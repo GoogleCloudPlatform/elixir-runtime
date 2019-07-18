@@ -5,7 +5,7 @@ defmodule MinimalPhoenix.Mixfile do
     [
       app: :minimal_phoenix,
       version: "0.0.1",
-      elixir: "~> 1.4",
+      elixir: "~> 1.7",
       compilers: [:phoenix] ++ Mix.compilers,
       start_permanent: Mix.env == :prod,
       deps: deps()
@@ -24,7 +24,7 @@ defmodule MinimalPhoenix.Mixfile do
       {:phoenix, "~> 1.3.0"},
       {:phoenix_pubsub, "~> 1.0"},
       {:phoenix_html, "~> 2.10"},
-      {:cowboy, "~> 1.0"},
+      {:plug_cowboy, "~> 1.0"},
       {:distillery, "~> 1.5"}
     ]
   end

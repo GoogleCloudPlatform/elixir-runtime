@@ -83,6 +83,7 @@ defmodule GenerateDockerfile.AppConfig do
     project_id_for_example = project_id || "my-project-id"
 
     deps_info = analyze_deps(workspace_dir)
+    distillery_version = Map.get(deps_info, :distillery)
     phoenix_version = Map.get(deps_info, :phoenix)
     phoenix_prefix = get_phoenix_prefix(phoenix_version)
 
@@ -100,7 +101,7 @@ defmodule GenerateDockerfile.AppConfig do
     mix_env = Map.get(env_variables, "MIX_ENV", @default_mix_env)
     install_packages = get_install_packages(runtime_config, app_config)
     cloud_sql_instances = get_cloud_sql_instances(beta_settings)
-    entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app)
+    entrypoint = get_entrypoint(runtime_config, app_config, phoenix_prefix, distillery_version, release_app)
     assets_dir = get_assets_dir(workspace_dir, phoenix_version)
     assets_builder = get_assets_builder(workspace_dir, assets_dir)
     build_scripts = get_build_scripts(runtime_config, assets_dir, assets_builder, phoenix_prefix)
@@ -121,6 +122,7 @@ defmodule GenerateDockerfile.AppConfig do
       install_packages: install_packages,
       cloud_sql_instances: cloud_sql_instances,
       phoenix_version: phoenix_version,
+      distillery_version: distillery_version,
       assets_dir: assets_dir,
       assets_builder: assets_builder,
       entrypoint: entrypoint,
@@ -161,7 +163,7 @@ defmodule GenerateDockerfile.AppConfig do
 
     {result, _} = Code.eval_file(mix_lock_path)
 
-    [:phoenix]
+    [:distillery, :phoenix]
     |> Enum.reduce(%{}, fn pkg, acc ->
       pkg_info = result[pkg]
 
@@ -280,25 +282,29 @@ defmodule GenerateDockerfile.AppConfig do
     cloud_sql_instances
   end
 
-  defp get_entrypoint(runtime_config, app_config, phoenix_prefix, release_app) do
+  defp get_entrypoint(runtime_config, app_config, phoenix_prefix, distillery_version, release_app) do
     Map.get_lazy(runtime_config, "entrypoint", fn ->
       Map.get_lazy(app_config, "entrypoint", fn ->
-        default_entrypoint(phoenix_prefix, release_app)
+        default_entrypoint(phoenix_prefix, release_app, distillery_version)
       end)
     end)
     |> validate_entrypoint
     |> decorate_entrypoint
   end
 
-  defp default_entrypoint(nil, nil) do
+  defp default_entrypoint(nil, nil, _) do
     warn_default_entrypoint("mix run --no-halt")
   end
 
-  defp default_entrypoint(phoenix_prefix, nil) do
+  defp default_entrypoint(phoenix_prefix, nil, _) do
     warn_default_entrypoint("mix #{phoenix_prefix}.server")
   end
 
-  defp default_entrypoint(_phoenix_prefix, release_app) do
+  defp default_entrypoint(_phoenix_prefix, release_app, nil) do
+    ["/app/bin/#{release_app}", "start"]
+  end
+
+  defp default_entrypoint(_phoenix_prefix, release_app, _distillery_version) do
     ["/app/bin/#{release_app}", "foreground"]
   end
 

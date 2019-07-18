@@ -19,23 +19,12 @@ defmodule SampleAppBuildTest do
   @moduletag timeout: 300_000
 
   test "Minimal plug app" do
-    config = """
-    env: flex
-    runtime: elixir
-    """
-
-    run_app_test("minimal_plug", config)
+    run_app_test("minimal_plug")
   end
 
   test "Minimal phoenix app" do
-    config = """
-    env: flex
-    runtime: elixir
-    """
-
     run_app_test(
       "minimal_phoenix",
-      config,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
@@ -44,13 +33,14 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.7\.4},
+          ~r{1\.8\.2},
           show: true
         )
       end
     )
   end
 
+  @tag meme: true
   test "Minimal phoenix app with release" do
     config = """
     env: flex
@@ -61,7 +51,7 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix",
-      config,
+      config: config,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix"],
@@ -71,7 +61,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.7.4",
+          "1.8.2",
           timeout: 10,
           show: true,
           verbose: true
@@ -89,9 +79,10 @@ defmodule SampleAppBuildTest do
     entrypoint: MIX_ENV=staging mix phx.server
     """
 
-    run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
+    run_app_test("minimal_phoenix", config: config, expected_output: ~r{from staging})
   end
 
+  @tag meme: true
   test "Minimal phoenix app with release in staging environment" do
     config = """
     env: flex
@@ -102,18 +93,12 @@ defmodule SampleAppBuildTest do
       MIX_ENV: staging
     """
 
-    run_app_test("minimal_phoenix", config, expected_output: ~r{from staging})
+    run_app_test("minimal_phoenix", config: config, expected_output: ~r{from staging})
   end
 
   test "Minimal phoenix 1.4 app" do
-    config = """
-    env: flex
-    runtime: elixir
-    """
-
     run_app_test(
       "minimal_phoenix14",
-      config,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
@@ -122,14 +107,14 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.8\.2},
+          ~r{1\.9\.0},
           show: true
         )
       end
     )
   end
 
-  test "Minimal phoenix 1.4 app with release" do
+  test "Minimal phoenix 1.4 app with elixir 1.9 release" do
     config = """
     env: flex
     runtime: elixir
@@ -139,7 +124,80 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix14",
-      config,
+      config: config,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix14"],
+          show: true
+        )
+      end,
+      check_container: fn _container ->
+        assert_cmd_output(
+          ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
+          "1.9.0",
+          timeout: 10,
+          show: true,
+          verbose: true
+        )
+      end
+    )
+  end
+
+  test "Minimal phoenix 1.4 app with distillery 2.1 release" do
+    config = """
+    env: flex
+    runtime: elixir
+    runtime_config:
+      release_app: minimal_phoenix14
+    """
+
+    run_app_test(
+      "minimal_phoenix14",
+      config: config,
+      postprocess_dir: fn dir ->
+        File.rename!(Path.join(dir, "mix-dist21.exs"), Path.join(dir, "mix.exs"))
+        File.rename!(Path.join(dir, "mix-dist21.lock"), Path.join(dir, "mix.lock"))
+      end,
+      check_image: fn image ->
+        assert_cmd_succeeds(
+          ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix14"],
+          show: true
+        )
+      end,
+      check_container: fn _container ->
+        assert_cmd_output(
+          ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
+          "1.9.0",
+          timeout: 10,
+          show: true,
+          verbose: true
+        )
+      end
+    )
+  end
+
+  test "Minimal phoenix 1.4 app with distillery 2.0 release" do
+    config = """
+    env: flex
+    runtime: elixir
+    runtime_config:
+      release_app: minimal_phoenix14
+    """
+
+    run_app_test(
+      "minimal_phoenix14",
+      config: config,
+      tool_versions: "elixir 1.8.2-otp-22\n",
+      postprocess_dir: fn dir ->
+        config_path = Path.join([dir, "rel", "config.exs"])
+        str =
+          config_path
+          |> File.read!()
+          |> String.replace("Distillery.Releases.Config", "Mix.Releases.Config")
+        File.write!(config_path, str)
+        File.rename!(Path.join(dir, "mix-dist20.exs"), Path.join(dir, "mix.exs"))
+        File.rename!(Path.join(dir, "mix-dist20.lock"), Path.join(dir, "mix.lock"))
+      end,
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-x", "/app/bin/minimal_phoenix14"],
@@ -160,11 +218,18 @@ defmodule SampleAppBuildTest do
 
   @apps_dir Path.join(__DIR__, "sample_apps")
   @tmp_dir Path.join(__DIR__, "tmp")
+  @default_config """
+    env: flex
+    runtime: elixir
+    """
 
-  def run_app_test(app_name, config, opts \\ []) do
+  def run_app_test(app_name, opts \\ []) do
     check_container = Keyword.get(opts, :check_container, nil)
     check_image = Keyword.get(opts, :check_image, nil)
     expected_output = Keyword.get(opts, :expected_output, ~r{Hello, world!})
+    config = Keyword.get(opts, :config, @default_config)
+    tool_versions = Keyword.get(opts, :tool_versions, nil)
+    postprocess_dir = Keyword.get(opts, :postprocess_dir, nil)
 
     File.rm_rf!(@tmp_dir)
 
@@ -175,6 +240,14 @@ defmodule SampleAppBuildTest do
     @tmp_dir
     |> Path.join("app.yaml")
     |> File.write!(config)
+
+    if tool_versions != nil do
+      @tmp_dir
+      |> Path.join(".tool-versions")
+      |> File.write!(tool_versions)
+    end
+    
+    if postprocess_dir != nil, do: postprocess_dir.(@tmp_dir)
 
     assert_cmd_succeeds(
       [

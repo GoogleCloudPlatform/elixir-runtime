@@ -127,7 +127,7 @@ RUN mix do deps.get, deps.compile, compile
 <% end %>
 
 ## Create the release.
-RUN mix release --env=<%= @mix_env %> --verbose
+RUN <%= @release_command %>
 
 
 ################################################################################
