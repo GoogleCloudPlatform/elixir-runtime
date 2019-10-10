@@ -117,7 +117,7 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.9\.0},
+          ~r{1\.9\.1},
           show: true
         )
       end
@@ -144,7 +144,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.9.0",
+          "1.9.1",
           timeout: 10,
           show: true,
           verbose: true
@@ -177,7 +177,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.9.0",
+          "1.9.1",
           timeout: 10,
           show: true,
           verbose: true
