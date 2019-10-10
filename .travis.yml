@@ -2,7 +2,7 @@ sudo: required
 
 language: elixir
 elixir:
-  - '1.9.0'
+  - '1.9.1'
 
 services:
   - docker
