@@ -298,7 +298,7 @@ defmodule GenerateDockerfile.AppConfig do
       |> List.wrap()
 
     Enum.each(install_packages, fn pkg ->
-      unless Regex.match?(~r{\A[\w.-]+\z}, pkg) do
+      unless Regex.match?(~r{\A[\w.+-]+\z}, pkg) do
         throw({:usage_error, "Illegal debian package name: `#{pkg}`."})
       end
     end)
