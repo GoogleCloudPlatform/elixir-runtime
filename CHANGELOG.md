@@ -18,11 +18,12 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## (unreleased)
+## elixir-2019-10-09-181239
 
 * Prebuilt OTP 21.3.8.6, 22.1, and 22.1.1.
 * Update default to elixir to 1.9.1.
 * Update default OTP to 22.1.1.
+* Allow custom debian packages with plus signs in the name.
 * Update gcloud to 265.0.0
 * Update nodejs to 10.16.3
 * Update asdf to 0.7.4
