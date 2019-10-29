@@ -9,18 +9,27 @@ choosing the following in your `app.yaml` config file:
 
 However, you may also pin to a specific version of the runtime by specifying
 the version name as the yaml file name. For example, to pin to the
-`elixir-2019-07-01-065508` release, use:
+`elixir-2019-10-09-181239` release, use:
 
-    runtime: gs://elixir-runtime/elixir-2019-07-01-065508.yaml
+    runtime: gs://elixir-runtime/elixir-2019-10-09-181239.yaml
 
 There is currently no guarantee regarding how long older runtime releases will
 continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## Unreleased
+
+* Prebuilt OTP up to 21.3.8.10 and 22.1.5
+* Removed prebuilt OTP 21.0.1 through 21.0.8 (but kept 21.0 and 21.0.9)
+* Update default elixir to 1.9.2
+* Update default OTP to 22.1.5
+* Update gcloud to 268.0.0
+* Update nodejs to 12.13.0
+
 ## elixir-2019-10-09-181239
 
-* Prebuilt OTP 21.3.8.6, 22.1, and 22.1.1.
+* Prebuilt OTP 21.3.8.7, 22.1, and 22.1.1.
 * Update default to elixir to 1.9.1.
 * Update default OTP to 22.1.1.
 * Allow custom debian packages with plus signs in the name.
