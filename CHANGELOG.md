@@ -18,7 +18,7 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## unreleased
+## elixir-2019-12-10-142915
 
 * Prebuilt OTP 21.3.8.11 and 22.1.8
 * Update default OTP to 22.1.8
