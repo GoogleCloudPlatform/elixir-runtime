@@ -20,13 +20,13 @@ defmodule Mix.Tasks.BuildLocalImages do
   @shortdoc "Build images locally."
 
   @os_name "ubuntu18"
-  @prebuilt_erlang_versions ["22.2.3"]
-  @base_erlang_version "22.2.3"
-  @base_elixir_version "1.9.4-otp-22"
+  @prebuilt_erlang_versions ["22.2.8"]
+  @base_erlang_version "22.2.8"
+  @base_elixir_version "1.10.2-otp-22"
   @old_distillery_elixir_version "1.8.2-otp-22"
-  @asdf_version "0.7.6"
-  @nodejs_version "12.14.1"
-  @gcloud_version "277.0.0"
+  @asdf_version "0.7.8"
+  @nodejs_version "12.16.1"
+  @gcloud_version "287.0.0"
 
   @prebuilt_erlang_image_prefix "elixir-prebuilt-erlang-"
 
