@@ -1,0 +1,32 @@
+name: "CI tests"
+
+on:
+  pull_request:
+    branches:
+      - master
+  push:
+    branches:
+      - master
+  workflow_dispatch:
+
+jobs:
+  tests:
+    if: ${{ github.repository == 'GoogleCloudPlatform/elixir-runtime' }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Install Elixir
+        uses: actions/setup-elixir@v1
+        with:
+          otp-version: "23.1.4"
+          elixir-version: "1.11.2"
+      - name: Checkout repo
+        uses: actions/checkout@v2
+      - name: Compile
+        run: |
+          mix do deps.get, compile
+      - name: Build
+        shell: bash
+        run: mix build_local_images --prebuilt-images-tag=staging
+      - name: Test
+        shell: bash
+        run: mix test
