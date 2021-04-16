@@ -30,7 +30,7 @@ if [ -f ${DIRNAME}/erlang-versions.txt ]; then
 fi
 STAGING_FLAG=
 AUTO_YES=
-BUILD_TIMEOUT=60m
+BUILD_TIMEOUT=90m
 
 show_usage() {
   echo 'Usage: ./erlang-build.sh [flags...]' >&2
