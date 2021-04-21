@@ -19,6 +19,7 @@ jobs:
         with:
           otp-version: "23.3.1"
           elixir-version: "1.11.4"
+          experimental-otp: true
       - name: Checkout repo
         uses: actions/checkout@v2
       - name: Compile
