@@ -9,7 +9,7 @@
     {
       "name": "test_cloudsqlproxy_installation",
       "command": ["cloud_sql_proxy", "--version"],
-      "expectedOutput": ["Cloud SQL Proxy"]
+      "expectedOutput": ["Cloud SQL Auth proxy"]
     },
     {
       "name": "test_gcloud_installation",
