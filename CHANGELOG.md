@@ -18,14 +18,15 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
-## (unreleased)
+## elixir-2021-04-26-035921
 
-* Update default Elixir to 1.11.2.
-* Update default OTP to 22.3.4.12.
-* Prebuilt OTP 22.3.4.5 through 22.3.4.12, 23.0.4, and 23.1 through 23.1.4.
-* Update gcloud to 319.0.0.
-* Update nodejs to 14.15.1.
-* Update asdf to 0.8.0
+* Update default Elixir to 1.11.4.
+* Update default OTP to 22.3.4.17.
+* Prebuilt OTP 22.3.4.5 through 22.3.4.17, 23.0.4, 23.1 through 23.1.5, 23.2 through 23.2.7.2, and 23.3 through 23.3.1.
+* Dropped prebuilt binaries for OTP 20.x.
+* Update gcloud to 334.0.0.
+* Update nodejs to 14.16.1.
+* Update asdf to 0.8.0.
 
 ## elixir-2020-08-03-131308
 
