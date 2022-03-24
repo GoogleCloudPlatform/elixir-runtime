@@ -21,6 +21,11 @@ defmodule GeneratorTest do
   @tmp_dir Path.join(@test_dir, "tmp")
   @template_dir Path.expand("../../app", @test_dir)
 
+  @default_erlang_version "23.3.4.11"
+  @default_elixir_version "1.13.3-otp-23"
+  @old_distillery_erlang_version "22.3.4.17"
+  @old_distillery_elixir_version "1.8.2-otp-22"
+
   @minimal_config """
   env: flex
   runtime: gs://elixir-runtime/elixir.yaml
@@ -35,8 +40,8 @@ defmodule GeneratorTest do
     assert_dockerfile_line("## Project: (unknown)")
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/builder AS app-build")
     assert_dockerfile_line("#     && apt-get install -y -q package-name")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("# RUN gcloud config set project my-project-id")
     assert_dockerfile_line("# ENV NAME=\"value\"")
@@ -149,8 +154,8 @@ defmodule GeneratorTest do
 
     run_generator("minimal", config: config)
     assert_dockerfile_line("FROM gcr.io/gcp-elixir/runtime/ubuntu18/builder AS app-build")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
     assert_dockerfile_line("RUN asdf plugin-update erlang")
     assert_dockerfile_line("RUN mix release")
     assert_dockerfile_line("COPY --from=app-build /app/_build/prod/rel/my_app /app/")
@@ -199,8 +204,8 @@ defmodule GeneratorTest do
     run_generator("phoenix_1_3")
     assert_ignore_line("priv/static")
     assert_ignore_line("assets/node_modules")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@old_distillery_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@old_distillery_elixir_version}\"")
     refute_dockerfile_line("RUN mix release")
     refute_dockerfile_line("RUN mix distillery.release")
   end
@@ -219,8 +224,8 @@ defmodule GeneratorTest do
     run_generator("phoenix_umbrella_1_3")
     assert_ignore_line("priv/static")
     assert_ignore_line("apps/blog_web/assets/node_modules")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
     refute_dockerfile_line("RUN mix release")
     refute_dockerfile_line("RUN mix distillery.release")
   end
@@ -244,8 +249,8 @@ defmodule GeneratorTest do
         """
 
     run_generator("phoenix_1_3", config: config)
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.8.2-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@old_distillery_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@old_distillery_elixir_version}\"")
     assert_dockerfile_line("RUN mix release --env=prod --verbose")
   end
 
@@ -276,8 +281,8 @@ defmodule GeneratorTest do
         """
 
     run_generator("phoenix_umbrella_1_3", config: config)
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
     assert_dockerfile_line("RUN mix release blog")
   end
 
@@ -323,8 +328,8 @@ defmodule GeneratorTest do
         """
 
     run_generator("phoenix_1_4", config: config)
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
     assert_dockerfile_line("RUN mix distillery.release --env=prod --verbose")
   end
 
@@ -362,12 +367,12 @@ defmodule GeneratorTest do
   end
 
   test "minimal directory with prebuilt erlang" do
-    run_generator("minimal", prebuilt_erlang_versions: "22.0.7")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    run_generator("minimal", prebuilt_erlang_versions: @default_erlang_version)
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
 
     assert_dockerfile_line(
-      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-22.0.7:latest"
+      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-#{@default_erlang_version}:latest"
     )
   end
 
@@ -379,12 +384,12 @@ defmodule GeneratorTest do
           release_app: my_app
         """
 
-    run_generator("minimal", config: config, prebuilt_erlang_versions: "22.0.7")
-    assert_dockerfile_line("ARG erlang_version=\"22.0.7\"")
-    assert_dockerfile_line("ARG elixir_version=\"1.9.0-otp-22\"")
+    run_generator("minimal", config: config, prebuilt_erlang_versions: @default_erlang_version)
+    assert_dockerfile_line("ARG erlang_version=\"#{@default_erlang_version}\"")
+    assert_dockerfile_line("ARG elixir_version=\"#{@default_elixir_version}\"")
 
     assert_dockerfile_line(
-      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-22.0.7:latest"
+      "COPY --from=gcr.io/gcp-elixir/runtime/ubuntu18/prebuilt/otp-#{@default_erlang_version}:latest"
     )
   end
 
@@ -434,9 +439,10 @@ defmodule GeneratorTest do
       os_image: "gcr.io/gcp-elixir/runtime/ubuntu18",
       asdf_image: "gcr.io/gcp-elixir/runtime/ubuntu18/asdf",
       builder_image: "gcr.io/gcp-elixir/runtime/ubuntu18/builder",
-      default_erlang_version: "22.0.7",
-      default_elixir_version: "1.9.0-otp-22",
-      old_distillery_elixir_version: "1.8.2-otp-22"
+      default_erlang_version: @default_erlang_version,
+      default_elixir_version: @default_elixir_version,
+      old_distillery_erlang_version: @old_distillery_erlang_version,
+      old_distillery_elixir_version: @old_distillery_elixir_version
     ]
 
     opts =
