@@ -18,6 +18,16 @@ continue to be supported. It is generally best not to pin to a specific
 release unless absolutely necessary, and then you should return to latest as
 soon as possible.
 
+## elixir-2022-03-25-173415
+
+* Update default Elixir to 1.13.3.
+* Update default OTP to 23.3.4.11.
+* Prebuilt OTP 23.1.4.1, 23.2.7.3, 23.2.7.4, 23.3.2 through 23.3.4.11, and 24.0 through 24.3.2.
+* Dropped prebuilt binaries for OTP 22.x except the "latest" patch of each branch. Currently, we provide prebuilt binaries for branch tips of OTP 21 and 22, and all released versions of OTP 23 and 24.
+* Update gcloud to 378.0.0.
+* Update nodejs to 16.14.2.
+* Update asdf to 0.9.0.
+
 ## elixir-2021-04-26-035921
 
 * Update default Elixir to 1.11.4.
