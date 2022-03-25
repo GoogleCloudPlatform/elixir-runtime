@@ -17,8 +17,8 @@ jobs:
       - name: Install Elixir
         uses: actions/setup-elixir@v1
         with:
-          otp-version: "23.3.1"
-          elixir-version: "1.11.4"
+          otp-version: "23.3.4.11"
+          elixir-version: "1.13.3"
           experimental-otp: true
       - name: Checkout repo
         uses: actions/checkout@v2

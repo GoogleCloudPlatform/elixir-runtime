@@ -32,6 +32,7 @@ ARG builder_image=""
 ARG prebuilt_erlang_images=""
 ARG default_erlang_version=""
 ARG default_elixir_version=""
+ARG old_distillery_erlang_version=""
 ARG old_distillery_elixir_version=""
 
 ENV DEFAULT_OS_IMAGE=${os_image} \
@@ -40,6 +41,7 @@ ENV DEFAULT_OS_IMAGE=${os_image} \
     DEFAULT_PREBUILT_ERLANG_IMAGES=${prebuilt_erlang_images} \
     DEFAULT_ERLANG_VERSION=${default_erlang_version} \
     DEFAULT_ELIXIR_VERSION=${default_elixir_version} \
+    OLD_DISTILLERY_ERLANG_VERSION=${old_distillery_erlang_version} \
     OLD_DISTILLERY_ELIXIR_VERSION=${old_distillery_elixir_version}
 
 # Install the wrapper script and templates.

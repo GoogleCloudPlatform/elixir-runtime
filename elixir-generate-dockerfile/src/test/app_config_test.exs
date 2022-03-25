@@ -19,8 +19,9 @@ defmodule AppConfigTest do
   @test_dir __DIR__
   @cases_dir Path.join(@test_dir, "app_config")
   @tmp_dir Path.join(@test_dir, "tmp")
-  @default_erlang_version "22.0.7"
-  @default_elixir_version "1.9.0-otp-22"
+  @default_erlang_version "23.3.4.11"
+  @default_elixir_version "1.13.3-otp-23"
+  @old_distillery_erlang_version "22.3.4.17"
   @old_distillery_elixir_version "1.8.2-otp-22"
 
   @minimal_config """
@@ -64,6 +65,7 @@ defmodule AppConfigTest do
         workspace_dir: @tmp_dir,
         default_erlang_version: @default_erlang_version,
         default_elixir_version: @default_elixir_version,
+        old_distillery_erlang_version: @old_distillery_erlang_version,
         old_distillery_elixir_version: @old_distillery_elixir_version,
         register_module: false
       )
@@ -232,8 +234,8 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/webpack/bin/webpack.js --mode production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
+    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
+    assert AppConfig.get!(:elixir_version, pid) == @default_elixir_version
   end
 
   test "phoenix 1.4 with release" do
@@ -255,8 +257,8 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/webpack/bin/webpack.js --mode production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
+    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
+    assert AppConfig.get!(:elixir_version, pid) == @default_elixir_version
   end
 
   test "phoenix 1.3 defaults" do
@@ -271,8 +273,8 @@ defmodule AppConfigTest do
              "cd assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.8.2-otp-22"
+    assert AppConfig.get!(:erlang_version, pid) == @old_distillery_erlang_version
+    assert AppConfig.get!(:elixir_version, pid) == @old_distillery_elixir_version
   end
 
   test "phoenix umbrella 1.3 defaults" do
@@ -287,8 +289,8 @@ defmodule AppConfigTest do
              "cd apps/blog_web/assets && npm install && node_modules/brunch/bin/brunch build --production && cd .. && mix phx.digest"
            ]
 
-    assert AppConfig.get!(:erlang_version, pid) == "22.0.7"
-    assert AppConfig.get!(:elixir_version, pid) == "1.9.0-otp-22"
+    assert AppConfig.get!(:erlang_version, pid) == @default_erlang_version
+    assert AppConfig.get!(:elixir_version, pid) == @default_elixir_version
   end
 
   test "phoenix 1.2 defaults" do

@@ -18,6 +18,11 @@ defmodule SampleAppBuildTest do
 
   @moduletag timeout: 300_000
 
+  @old_elixir_version_short "1.8.2"
+  @old_elixir_version_long "#{@old_elixir_version_short}-otp-22"
+  @new_elixir_version_short "1.13.3"
+  @new_elixir_version_regex @new_elixir_version_short |> Regex.escape() |> Regex.compile!()
+
   test "Minimal plug app" do
     run_app_test("minimal_plug")
   end
@@ -25,7 +30,7 @@ defmodule SampleAppBuildTest do
   test "Minimal phoenix app" do
     run_app_test(
       "minimal_phoenix",
-      tool_versions: "elixir 1.8.2-otp-22\n",
+      tool_versions: "elixir #{@old_elixir_version_long}\n",
       check_image: fn image ->
         assert_cmd_succeeds(
           ["docker", "run", "--rm", image, "test", "-f", "/app/priv/static/cache_manifest.json"],
@@ -51,7 +56,7 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix",
-      tool_versions: "elixir 1.8.2-otp-22\n",
+      tool_versions: "elixir #{@old_elixir_version_long}\n",
       config: config,
       check_image: fn image ->
         assert_cmd_succeeds(
@@ -62,7 +67,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.8.2",
+          @old_elixir_version_short,
           timeout: 10,
           show: true,
           verbose: true
@@ -82,7 +87,7 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix",
-      tool_versions: "elixir 1.8.2-otp-22\n",
+      tool_versions: "elixir #{@old_elixir_version_long}\n",
       config: config,
       expected_output: ~r{from staging}
     )
@@ -100,7 +105,7 @@ defmodule SampleAppBuildTest do
 
     run_app_test(
       "minimal_phoenix",
-      tool_versions: "elixir 1.8.2-otp-22\n",
+      tool_versions: "elixir #{@old_elixir_version_long}\n",
       config: config,
       expected_output: ~r{from staging}
     )
@@ -117,7 +122,7 @@ defmodule SampleAppBuildTest do
 
         assert_cmd_output(
           ["docker", "run", "--rm", image, "elixir", "--version"],
-          ~r{1\.11\.4},
+          @new_elixir_version_regex,
           show: true
         )
       end
@@ -144,7 +149,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.11.4",
+          @new_elixir_version_short,
           timeout: 10,
           show: true,
           verbose: true
@@ -177,7 +182,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.11.4",
+          @new_elixir_version_short,
           timeout: 10,
           show: true,
           verbose: true
@@ -218,7 +223,7 @@ defmodule SampleAppBuildTest do
       check_container: fn _container ->
         assert_cmd_output(
           ["curl", "-s", "-S", "http://localhost:8080/elixir-version"],
-          "1.8.2",
+          @old_elixir_version_short,
           timeout: 10,
           show: true,
           verbose: true

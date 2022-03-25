@@ -6,6 +6,7 @@ steps:
            '--builder-image=@@BUILDER_IMAGE@@:@@TAG@@',
            '--default-erlang-version=@@DEFAULT_ERLANG_VERSION@@',
            '--default-elixir-version=@@DEFAULT_ELIXIR_VERSION@@',
+           '--old-distillery-erlang-version=@@OLD_DISTILLERY_ERLANG_VERSION@@',
            '--old-distillery-elixir-version=@@OLD_DISTILLERY_ELIXIR_VERSION@@']
   - name: 'gcr.io/cloud-builders/docker:latest'
     args: ['build', '--network=cloudbuild', '-t', '$_OUTPUT_IMAGE', '.']
