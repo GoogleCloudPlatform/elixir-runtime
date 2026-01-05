@@ -244,10 +244,10 @@ sed -e "s|@@GENERATE_DOCKERFILE_IMAGE@@|${GENERATE_DOCKERFILE_IMAGE}|g;\
 echo "**** Created runtime config: ${DIRNAME}/tmp/elixir-${IMAGE_TAG}.yaml"
 
 if [ -n "${UPLOAD_BUCKET}" ]; then
-  gsutil cp ${DIRNAME}/tmp/elixir-${IMAGE_TAG}.yaml gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml
+  gcloud storage cp ${DIRNAME}/tmp/elixir-${IMAGE_TAG}.yaml gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml
   echo "**** Uploaded runtime config to gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml"
   if [ "${STAGING_FLAG}" = "true" ]; then
-    gsutil cp gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml gs://${UPLOAD_BUCKET}/elixir-staging.yaml
+    gcloud storage cp gs://${UPLOAD_BUCKET}/elixir-${IMAGE_TAG}.yaml gs://${UPLOAD_BUCKET}/elixir-staging.yaml
     echo "**** Also promoted runtime config to gs://${UPLOAD_BUCKET}/elixir-staging.yaml"
   fi
 fi
